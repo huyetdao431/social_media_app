@@ -2,14 +2,15 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:social_media_app/main_cubit/main_cubit.dart';
 import 'package:social_media_app/materials/app_theme.dart';
 import 'package:social_media_app/routes.dart';
-import 'package:social_media_app/screens/auth_screen/login_screen.dart';
+import 'package:social_media_app/screens/main_screen/main_screen.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
 import 'package:social_media_app/services/repositories/api/api_impl.dart';
 import 'package:social_media_app/services/repositories/log/log.dart';
 import 'package:social_media_app/services/repositories/log/log_impl.dart';
+
+import 'cubit/main_cubit/main_cubit.dart';
 
 class SimpleBlocObserver extends BlocObserver {
   const SimpleBlocObserver();
@@ -33,8 +34,10 @@ class SimpleBlocObserver extends BlocObserver {
   }
 
   @override
-  void onTransition(Bloc<dynamic, dynamic> bloc,
-      Transition<dynamic, dynamic> transition,) {
+  void onTransition(
+    Bloc<dynamic, dynamic> bloc,
+    Transition<dynamic, dynamic> transition,
+  ) {
     super.onTransition(bloc, transition);
     print('onTransition -- bloc: ${bloc.runtimeType}, transition: $transition');
   }
@@ -69,10 +72,7 @@ class Repository extends StatelessWidget {
   Widget build(BuildContext context) {
     return RepositoryProvider<Api>(
       create: (context) => ApiImpl(context.read<Log>()),
-      child: BlocProvider(
-        create: (context) => MainCubit(),
-        child: Provider(),
-      ),
+      child: BlocProvider(create: (context) => MainCubit(), child: Provider()),
     );
   }
 }
@@ -88,13 +88,13 @@ class Provider extends StatelessWidget {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             scrollBehavior: MaterialScrollBehavior().copyWith(
-              dragDevices: {PointerDeviceKind.mouse},
+              dragDevices: {PointerDeviceKind.mouse, PointerDeviceKind.touch, PointerDeviceKind.trackpad},
             ),
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: state.isLightTheme ? ThemeMode.light : ThemeMode.dark,
             onGenerateRoute: mainRoute,
-            initialRoute: LoginScreen.route,
+            initialRoute: MainScreen.route,
           );
         },
       ),

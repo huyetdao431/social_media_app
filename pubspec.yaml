@@ -37,6 +37,12 @@ dependencies:
   flutter_bloc: ^9.1.1
   bloc: ^9.0.0
   google_fonts: ^6.2.1
+  carousel_slider: ^5.1.1
+  scrollable_positioned_list: ^0.3.8
+  image_picker: ^1.1.2
+  photo_manager: ^3.7.1
+  video_player: ^2.10.0
+  pro_image_editor: ^10.1.1
 
 dev_dependencies:
   flutter_test:
@@ -61,8 +67,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+     - assets/images/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
