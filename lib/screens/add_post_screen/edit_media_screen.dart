@@ -1,10 +1,11 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:social_media_app/commons/enums/load_status.dart';
 import 'package:social_media_app/cubit/post_cubit/post_cubit.dart';
 import 'package:social_media_app/materials/app_colors.dart';
+import 'package:social_media_app/screens/add_post_screen/add_post_screen.dart';
 
 import 'edit_image_screen.dart';
 
@@ -19,30 +20,71 @@ class EditMediaScreen extends StatelessWidget {
     return Theme(
       data: ThemeData.dark(),
       child: BlocProvider(
-        create: (context) => PostCubit(),
-        child: Page(assets: assets),
+        create: (context) => PostCubit()..loadSelectedAssets(assets),
+        child: const Page(),
       ),
     );
   }
 }
 
 class Page extends StatefulWidget {
-  const Page({super.key, required this.assets});
-
-  final List<AssetEntity> assets;
+  const Page({super.key});
 
   @override
   State<Page> createState() => _PageState();
 }
 
 class _PageState extends State<Page> {
+  final PageController _controller = PageController(viewportFraction: 0.9);
+
   @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await context.read<PostCubit>().loadSelectedAssets(widget.assets);
-    });
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _openMenu(BuildContext context, Offset offset) async {
+    final screenSize = MediaQuery.sizeOf(context);
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy,
+        screenSize.width - offset.dx,
+        screenSize.height - offset.dy,
+      ),
+      items: [
+        const PopupMenuItem(
+          value: 'portrait',
+          child: Row(
+            children: [
+              Icon(Icons.crop_portrait),
+              SizedBox(width: 6),
+              Text('Doc'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'square',
+          child: Row(
+            children: [
+              Icon(Icons.crop_square),
+              SizedBox(width: 6),
+              Text('Vuong'),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    if (selected != null) {
+      if (!context.mounted) return;
+      setState(() {
+        context.read<PostCubit>().updateAspectRatio(
+          selected == 'square' ? 1 : 4 / 5,
+        );
+      });
+    }
   }
 
   void _gotoEditScreen(PostCubit cubit) {
@@ -55,21 +97,26 @@ class _PageState extends State<Page> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.sizeOf(context).width;
     return BlocBuilder<PostCubit, PostState>(
+      buildWhen:
+          (previous, current) =>
+              previous.selectedAssets != current.selectedAssets ||
+              previous.selectedIndex != current.selectedIndex ||
+              previous.loadStatus != current.loadStatus,
       builder: (context, state) {
         var cubit = context.read<PostCubit>();
-        var selectedIndex = state.seletedIndex;
+        var selectedIndex = state.selectedIndex;
         return Scaffold(
           appBar: AppBar(
             leading: IconButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              icon: Icon(Icons.close),
+              icon: const Icon(Icons.close),
             ),
           ),
           body:
               state.loadStatus == LoadStatus.loading
-                  ? Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator())
                   : Column(
                     children: [
                       Expanded(
@@ -77,102 +124,167 @@ class _PageState extends State<Page> {
                           child: Stack(
                             children: [
                               SizedBox(
-                                height: screenWidth,
-                                child: CarouselSlider(
-                                  items: [
-                                    for (var item in cubit.state.selectedAssets)
-                                      Stack(
+                                height:
+                                    cubit.state.aspectRatio == 1
+                                        ? screenWidth
+                                        : screenWidth * 1.3,
+                                child: PageView.builder(
+                                  controller: _controller,
+                                  itemCount: cubit.state.selectedAssets.length,
+                                  onPageChanged: (index) {
+                                    cubit.setIndex(index);
+                                  },
+                                  itemBuilder: (context, index) {
+                                    var imageWidth = screenWidth * 0.9;
+                                    var imageHeight =
+                                        cubit.state.aspectRatio == 1
+                                            ? screenWidth * 0.9
+                                            : screenWidth * 0.9 / 4 * 5;
+                                    return Center(
+                                      child: Stack(
                                         children: [
                                           GestureDetector(
                                             onTap: () => _gotoEditScreen(cubit),
-                                            child: Container(
-                                              width: screenWidth,
-                                              margin: EdgeInsets.symmetric(
-                                                horizontal: 4,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                              clipBehavior: Clip.hardEdge,
-                                              child: Image.memory(
-                                                item,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: 0,
-                                            right: 4,
-                                            child: GestureDetector(
-                                              onTap: () {
-                                                setState(() {
-                                                  cubit.removeAsset();
-                                                  if (cubit
-                                                      .state
-                                                      .selectedAssets
-                                                      .isEmpty) {
-                                                    Navigator.pop(context);
-                                                  } else {
-                                                    if (selectedIndex != 0) {
-                                                      selectedIndex -=
-                                                          selectedIndex >=
-                                                                  cubit
-                                                                      .state
-                                                                      .selectedAssets
-                                                                      .length
-                                                              ? 1
-                                                              : 0;
-                                                    }
-                                                  }
-                                                });
-                                              },
-                                              child: Container(
-                                                padding: EdgeInsets.all(2),
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: AppColors
-                                                      .textMutedLight
-                                                      .withAlpha(160),
+                                            child: Stack(
+                                              children: [
+                                                Container(
+                                                  width: imageWidth,
+                                                  height: imageHeight,
+                                                  margin:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 4,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                  ),
+                                                  clipBehavior: Clip.hardEdge,
+                                                  child:
+                                                      cubit
+                                                                  .state
+                                                                  .selectedAssets[index]
+                                                                  .type ==
+                                                              AssetType.image
+                                                          ? AssetEntityImage(
+                                                            cubit
+                                                                .state
+                                                                .selectedAssets[index],
+                                                            fit: BoxFit.cover,
+                                                            isOriginal: true,
+                                                          )
+                                                          : Video(
+                                                            key: ValueKey(
+                                                              cubit
+                                                                  .state
+                                                                  .selectedAssets[index]
+                                                                  .id,
+                                                            ),
+                                                            video:
+                                                                cubit
+                                                                    .state
+                                                                    .selectedAssets[index],
+                                                            shouldPlay:
+                                                                cubit
+                                                                    .state
+                                                                    .selectedAssets
+                                                                    .indexOf(
+                                                                      cubit
+                                                                          .state
+                                                                          .selectedAssets[index],
+                                                                    ) ==
+                                                                cubit
+                                                                    .state
+                                                                    .selectedIndex,
+                                                          ),
                                                 ),
-                                                child: Icon(
-                                                  Icons.close,
-                                                  color: AppColors.textLight,
-                                                  size: 24,
-                                                ),
-                                              ),
+
+                                                if (cubit
+                                                        .state
+                                                        .selectedAssets
+                                                        .length >
+                                                    2)
+                                                  Positioned(
+                                                    top: 0,
+                                                    right: 4,
+                                                    child: GestureDetector(
+                                                      onTap: () {
+                                                        setState(() {
+                                                          cubit.removeAsset();
+                                                          if (cubit
+                                                              .state
+                                                              .selectedAssets
+                                                              .isEmpty) {
+                                                            Navigator.pop(
+                                                              context,
+                                                            );
+                                                          } else if (selectedIndex !=
+                                                              0) {
+                                                            _controller.jumpToPage(
+                                                              selectedIndex >=
+                                                                      cubit
+                                                                          .state
+                                                                          .selectedAssets
+                                                                          .length
+                                                                  ? selectedIndex -
+                                                                      1
+                                                                  : selectedIndex,
+                                                            );
+                                                          }
+                                                        });
+                                                      },
+                                                      child: Container(
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                              2,
+                                                            ),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                              shape:
+                                                                  BoxShape
+                                                                      .circle,
+                                                              color: AppColors
+                                                                  .textDark
+                                                                  .withAlpha(
+                                                                    160,
+                                                                  ),
+                                                            ),
+                                                        child: const Icon(
+                                                          Icons.close,
+                                                          color:
+                                                              AppColors
+                                                                  .textLight,
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
                                             ),
                                           ),
                                         ],
                                       ),
-                                  ],
-                                  options: CarouselOptions(
-                                    height: screenWidth * 0.9,
-                                    viewportFraction: 0.9,
-                                    enableInfiniteScroll: false,
-                                    autoPlay: false,
-                                    onPageChanged: (index, reason) {
-                                      setState(() {
-                                        cubit.setIndex(index);
-                                      });
-                                    },
-                                  ),
+                                    );
+                                  },
                                 ),
                               ),
                               Positioned(
                                 bottom: screenWidth * 0.1 / 2 - 14,
                                 left: screenWidth * 0.1 / 2 - 14,
                                 child: GestureDetector(
-                                  onTap: () {},
+                                  onPanEnd: (details) {
+                                    _openMenu(context, details.globalPosition);
+                                  },
                                   child: Container(
-                                    padding: EdgeInsets.all(2),
+                                    padding: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: AppColors.textMutedLight.withAlpha(
                                         160,
                                       ),
                                     ),
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.fullscreen,
                                       color: AppColors.textLight,
                                       size: 32,
@@ -184,109 +296,113 @@ class _PageState extends State<Page> {
                           ),
                         ),
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildEditButton(
-                            context,
-                            Icon(Icons.text_fields, color: AppColors.textLight),
-                            'van ban',
-                            () {},
+                      GestureDetector(
+                        onTap: () => _gotoEditScreen(cubit),
+                        child: Container(
+                          width: screenWidth * 0.64,
+                          height: 36,
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.textMutedLight.withAlpha(128),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          _buildEditButton(
-                            context,
-                            Icon(Icons.image, color: AppColors.textLight),
-                            'lop phu',
-                            () {},
+                          child: const Center(
+                            child: Text(
+                              'Chỉnh sửa',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.subHeadlineDark,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
-                          _buildEditButton(
-                            context,
-                            Icon(Icons.filter_list, color: AppColors.textLight),
-                            'bo loc',
-                            () {},
-                          ),
-                          _buildEditButton(
-                            context,
-                            Icon(Icons.tune, color: AppColors.textLight),
-                            'chinh sua',
-                            () {},
-                          ),
-                        ],
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(12.0),
-                        child: GestureDetector(
-                          onTap: () {},
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              SizedBox.shrink(),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 6,
-                                ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Container(
+                                height: 36,
+                                width: 36,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(24),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppColors.textLight,
+                                    width: 3,
+                                  ),
+                                  color: AppColors.textLight.withAlpha(32),
                                 ),
-                                child: Row(
+                                clipBehavior: Clip.hardEdge,
+                                child: Stack(
                                   children: [
-                                    Text(
-                                      'Tiep',
-                                      style: TextStyle(
-                                        color: AppColors.textLight,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
+                                    Opacity(
+                                      opacity: 0.5,
+                                      child: AssetEntityImage(
+                                        cubit.state.selectedAssets[0],
+                                        fit: BoxFit.cover,
+                                        isOriginal: true,
                                       ),
                                     ),
-                                    const SizedBox(width: 4),
-                                    Icon(
-                                      Icons.arrow_forward_rounded,
-                                      color: AppColors.textLight,
+                                    Center(
+                                      child: Icon(
+                                        Icons.add,
+                                        color: AppColors.textLight,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                            GestureDetector(
+                              onTap: () {},
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const SizedBox.shrink(),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                    child: const Row(
+                                      children: [
+                                        Text(
+                                          'Tiếp',
+                                          style: TextStyle(
+                                            color: AppColors.textLight,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        SizedBox(width: 4),
+                                        Icon(
+                                          Icons.arrow_forward_rounded,
+                                          color: AppColors.textLight,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
         );
       },
-    );
-  }
-
-  Widget _buildEditButton(
-    BuildContext context,
-    Icon icon,
-    String label,
-    VoidCallback opTap,
-  ) {
-    return Container(
-      width: 64,
-      height: 48,
-      padding: EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.textMutedLight.withAlpha(128),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          icon,
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: AppColors.subHeadlineDark,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

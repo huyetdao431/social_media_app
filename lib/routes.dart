@@ -46,18 +46,18 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
               (context) =>
               BlocProvider.value(value: cubit, child: EditImageScreen()),
       );
+    case EditMediaScreen.route:
+      var assets =
+      (settings.arguments as Map<String, dynamic>)['assets']
+      as List<AssetEntity>;
+      return MaterialPageRoute(
+        builder: (context) => EditMediaScreen(assets: assets),
+      );
     case PostListScreen.route:
       int initialIndex =
           (settings.arguments as Map<String, dynamic>)['initialIndex'] as int;
       return MaterialPageRoute(
         builder: (context) => PostListScreen(initialIndex: initialIndex),
-      );
-    case EditMediaScreen.route:
-      var assets =
-          (settings.arguments as Map<String, dynamic>)['assets']
-              as List<AssetEntity>;
-      return MaterialPageRoute(
-        builder: (context) => EditMediaScreen(assets: assets),
       );
     default:
       return MaterialPageRoute(builder: (context) => Container());

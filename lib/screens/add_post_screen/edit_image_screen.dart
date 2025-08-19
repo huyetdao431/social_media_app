@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pro_image_editor/features/crop_rotate_editor/utils/crop_aspect_ratios.dart';
+import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:social_media_app/cubit/post_cubit/post_cubit.dart';
 
 class EditImageScreen extends StatelessWidget {
@@ -26,40 +27,15 @@ class _PageState extends State<Page> {
   late Uint8List rawImageBytes;
   Uint8List? editedImage;
 
-  void _openEditor(ProImageEditorFeature feature) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => ProImageEditor(
-              image: ProImage.memory(rawImageBytes),
-              config: ProImageEditorConfig(
-                // chỉ bật 1 tính năng khi mở
-                features: [feature],
-              ),
-              onImageEditComplete: (bytes) {
-                Navigator.pop(context, bytes);
-              },
-            ),
-      ),
-    );
-
-    if (result != null && result is Uint8List) {
-      setState(() {
-        editedImage = result;
-      });
-    }
-  }
-
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    rawImageBytes =
-        context.read<PostCubit>().state.selectedAssets[context
-            .read<PostCubit>()
-            .state
-            .seletedIndex];
+    // rawImageBytes =
+    //     context.read<PostCubit>().state.selectedAssets[context
+    //         .read<PostCubit>()
+    //         .state
+    //         .selectedIndex];
   }
 
   @override
@@ -67,56 +43,43 @@ class _PageState extends State<Page> {
     return BlocBuilder<PostCubit, PostState>(
       builder: (context, state) {
         var cubit = context.read<PostCubit>();
-        return Scaffold(
-          appBar: AppBar(),
-          body: Column(
-            children: [
-              // Hiển thị ảnh (nếu chưa edit thì lấy ảnh gốc)
-              Expanded(
-                child: Center(
-                  child:
-                      editedImage != null
-                          ? Image.memory(editedImage!)
-                          : Image.memory(rawImageBytes),
-                ),
-              ),
+        return ProImageEditor.memory(
+          rawImageBytes,
+          callbacks: ProImageEditorCallbacks(
 
-              // Thanh công cụ
-              Container(
-                color: Colors.grey.shade200,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 8,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.text_fields),
-                      label: const Text("Văn bản"),
-                      onPressed: () => _openEditor(ProImageEditorFeature.text),
-                    ),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.image),
-                      label: const Text("Lớp phủ"),
-                      onPressed:
-                          () => _openEditor(ProImageEditorFeature.sticker),
-                    ),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.filter),
-                      label: const Text("Bộ lọc"),
-                      onPressed:
-                          () => _openEditor(ProImageEditorFeature.filter),
-                    ),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.edit),
-                      label: const Text("Chỉnh sửa"),
-                      onPressed: () => _openEditor(ProImageEditorFeature.crop),
-                    ),
-                  ],
-                ),
+          ),
+          configs: ProImageEditorConfigs(
+            theme: ThemeData.dark(),
+            i18n: const I18n(
+              textEditor: I18nTextEditor(bottomNavigationBarText: 'Van ban'),
+              tuneEditor: I18nTuneEditor(bottomNavigationBarText: 'Chinh sua'),
+              filterEditor: I18nFilterEditor(bottomNavigationBarText: 'Bo loc'),
+              stickerEditor: I18nStickerEditor(
+                bottomNavigationBarText: 'Lop phu',
               ),
-            ],
+              cropRotateEditor: I18nCropRotateEditor(
+                bottomNavigationBarText: 'Cat anh',
+              ),
+            ),
+            textEditor: TextEditorConfigs(enabled: true),
+            stickerEditor: StickerEditorConfigs(enabled: true),
+            filterEditor: FilterEditorConfigs(enabled: true),
+            tuneEditor: TuneEditorConfigs(enabled: true),
+            cropRotateEditor: CropRotateEditorConfigs(
+              enabled: true,
+              initAspectRatio:
+                  cubit.state.aspectRatio == 1
+                      ? CropAspectRatios.ratio1_1
+                      : CropAspectRatios.ratio9_16,
+              showAspectRatioButton: false,
+              style: CropRotateEditorStyle(
+                cropCornerThickness: 0,
+              ),
+              maxWidthFactor: 1.0,
+            ),
+            paintEditor: PaintEditorConfigs(enabled: false),
+            emojiEditor: EmojiEditorConfigs(enabled: false),
+            blurEditor: BlurEditorConfigs(enabled: false),
           ),
         );
       },

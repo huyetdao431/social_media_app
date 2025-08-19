@@ -41,8 +41,9 @@ dependencies:
   scrollable_positioned_list: ^0.3.8
   image_picker: ^1.1.2
   photo_manager: ^3.7.1
+  photo_manager_image_provider: ^2.2.0
   video_player: ^2.10.0
-  pro_image_editor: ^10.1.1
+  pro_image_editor: ^9.1.0
 
 dev_dependencies:
   flutter_test:

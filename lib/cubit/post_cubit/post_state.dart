@@ -2,23 +2,26 @@ part of 'post_cubit.dart';
 
 class PostState {
   final LoadStatus loadStatus;
-  final List<Uint8List> selectedAssets;
+  final List<AssetEntity> selectedAssets;
+  final List<Uint8List> thumbnails;
   final double aspectRatio;
-  final int seletedIndex;
+  final int selectedIndex;
 
   const PostState.init({
     this.loadStatus = LoadStatus.init,
     this.selectedAssets = const [],
+    this.thumbnails = const [],
     this.aspectRatio = 1,
-    this.seletedIndex = 0,
+    this.selectedIndex = 0,
   });
 
   //<editor-fold desc="Data Methods">
   const PostState({
     required this.loadStatus,
     required this.selectedAssets,
+    required this.thumbnails,
     required this.aspectRatio,
-    required this.seletedIndex,
+    required this.selectedIndex,
   });
 
   @override
@@ -28,37 +31,42 @@ class PostState {
           runtimeType == other.runtimeType &&
           loadStatus == other.loadStatus &&
           selectedAssets == other.selectedAssets &&
+          thumbnails == other.thumbnails &&
           aspectRatio == other.aspectRatio &&
-          seletedIndex == other.seletedIndex);
+          selectedIndex == other.selectedIndex);
 
   @override
   int get hashCode =>
       loadStatus.hashCode ^
       selectedAssets.hashCode ^
+      thumbnails.hashCode ^
       aspectRatio.hashCode ^
-      seletedIndex.hashCode;
+      selectedIndex.hashCode;
 
   @override
   String toString() {
     return 'PostState{' +
         ' loadStatus: $loadStatus,' +
         ' selectedAssets: $selectedAssets,' +
+        ' thumbnails: $thumbnails,' +
         ' aspectRatio: $aspectRatio,' +
-        ' seletedIndex: $seletedIndex,' +
+        ' selectedIndex: $selectedIndex,' +
         '}';
   }
 
   PostState copyWith({
     LoadStatus? loadStatus,
-    List<Uint8List>? selectedAssets,
+    List<AssetEntity>? selectedAssets,
+    List<Uint8List>? thumbnails,
     double? aspectRatio,
-    int? seletedIndex,
+    int? selectedIndex,
   }) {
     return PostState(
       loadStatus: loadStatus ?? this.loadStatus,
       selectedAssets: selectedAssets ?? this.selectedAssets,
+      thumbnails: thumbnails ?? this.thumbnails,
       aspectRatio: aspectRatio ?? this.aspectRatio,
-      seletedIndex: seletedIndex ?? this.seletedIndex,
+      selectedIndex: selectedIndex ?? this.selectedIndex,
     );
   }
 
@@ -66,17 +74,19 @@ class PostState {
     return {
       'loadStatus': this.loadStatus,
       'selectedAssets': this.selectedAssets,
+      'thumbnails': this.thumbnails,
       'aspectRatio': this.aspectRatio,
-      'seletedIndex': this.seletedIndex,
+      'selectedIndex': this.selectedIndex,
     };
   }
 
   factory PostState.fromMap(Map<String, dynamic> map) {
     return PostState(
       loadStatus: map['loadStatus'] as LoadStatus,
-      selectedAssets: map['selectedAssets'] as List<Uint8List>,
+      selectedAssets: map['selectedAssets'] as List<AssetEntity>,
+      thumbnails: map['thumbnails'] as List<Uint8List>,
       aspectRatio: map['aspectRatio'] as double,
-      seletedIndex: map['seletedIndex'] as int,
+      selectedIndex: map['selectedIndex'] as int,
     );
   }
 
