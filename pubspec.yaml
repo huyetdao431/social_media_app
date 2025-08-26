@@ -36,14 +36,21 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_bloc: ^9.1.1
   bloc: ^9.0.0
+  equatable: ^2.0.7
   google_fonts: ^6.2.1
   carousel_slider: ^5.1.1
   scrollable_positioned_list: ^0.3.8
   image_picker: ^1.1.2
+  path_provider: ^2.1.5
+  path: ^1.9.1
   photo_manager: ^3.7.1
   photo_manager_image_provider: ^2.2.0
-  video_player: ^2.10.0
   pro_image_editor: ^9.1.0
+  image: ^4.5.4
+  camera: ^0.11.2
+  video_player: ^2.10.0
+  easy_video_editor: ^0.1.2
+  pro_video_editor: ^0.2.3
 
 dev_dependencies:
   flutter_test:

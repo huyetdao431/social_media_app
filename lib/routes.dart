@@ -5,9 +5,12 @@ import 'package:social_media_app/cubit/post_cubit/post_cubit.dart';
 import 'package:social_media_app/screens/account_screen/account_screen.dart';
 import 'package:social_media_app/screens/account_screen/account_setting_screen.dart';
 import 'package:social_media_app/screens/add_post_screen/add_post_screen.dart';
+import 'package:social_media_app/screens/add_post_screen/camera_screen.dart';
 import 'package:social_media_app/screens/add_post_screen/edit_image_screen.dart';
 import 'package:social_media_app/screens/add_post_screen/edit_media_screen.dart';
 import 'package:social_media_app/screens/add_post_screen/edit_video_screen.dart';
+import 'package:social_media_app/screens/add_post_screen/preview_post_screen.dart';
+import 'package:social_media_app/screens/add_story_screen/add_story_screen.dart';
 import 'package:social_media_app/screens/home%20screen/home_screen.dart';
 import 'package:social_media_app/screens/auth_screen/login_screen.dart';
 import 'package:social_media_app/screens/main_screen/main_screen.dart';
@@ -30,21 +33,25 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (context) => SearchScreen());
     case AddPostScreen.route:
       return _pushCurrentPageRight(AddPostScreen());
+    case AddStoryScreen.route:
+      return _pushCurrentPageRight(AddStoryScreen());
+    case CameraScreen.route:
+      return _pushCurrentPageRight(CameraScreen());
     case EditImageScreen.route:
       var cubit =
-          (settings.arguments as Map<String, dynamic>)['cubit'] as PostCubit;
+      (settings.arguments as Map<String, dynamic>)['cubit'] as PostCubit;
       return MaterialPageRoute(
         builder:
             (context) =>
-                BlocProvider.value(value: cubit, child: EditImageScreen()),
+            BlocProvider.value(value: cubit, child: EditImageScreen()),
       );
     case EditVideoScreen.route:
       var cubit =
-          (settings.arguments as Map<String, dynamic>)['cubit'] as PostCubit;
+      (settings.arguments as Map<String, dynamic>)['cubit'] as PostCubit;
       return MaterialPageRoute(
-          builder:
-              (context) =>
-              BlocProvider.value(value: cubit, child: EditImageScreen()),
+        builder:
+            (context) =>
+            BlocProvider.value(value: cubit, child: EditVideoScreen()),
       );
     case EditMediaScreen.route:
       var assets =
@@ -53,9 +60,19 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => EditMediaScreen(assets: assets),
       );
+    case PreviewPostScreen.route:
+      var cubit = (settings.arguments as Map<String,
+          dynamic>)['cubit'] as PostCubit;
+      return MaterialPageRoute(
+        builder: (context) =>
+            BlocProvider.value(
+              value: cubit,
+              child: PreviewPostScreen(),
+            ),
+      );
     case PostListScreen.route:
       int initialIndex =
-          (settings.arguments as Map<String, dynamic>)['initialIndex'] as int;
+      (settings.arguments as Map<String, dynamic>)['initialIndex'] as int;
       return MaterialPageRoute(
         builder: (context) => PostListScreen(initialIndex: initialIndex),
       );

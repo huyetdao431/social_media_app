@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +7,9 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:social_media_app/materials/app_colors.dart';
 import 'package:social_media_app/materials/app_text_styles.dart';
 import 'package:social_media_app/screens/add_post_screen/edit_media_screen.dart';
-import 'package:video_player/video_player.dart';
+
+import '../../commons/widgets/display_video.dart';
+import 'camera_screen.dart';
 
 class AddPostScreen extends StatefulWidget {
   static const String route = 'AddPostScreen';
@@ -49,22 +52,6 @@ class _PageState extends State<Page> {
   int _selectedCarouselIndex = 0;
   int _selectedMediaIndex = 0;
 
-  final ImagePicker _picker = ImagePicker();
-
-  Future<void> _captureAndGetAsset() async {
-    final XFile? file = await _picker.pickImage(source: ImageSource.camera);
-    if (file == null) return;
-
-    final AssetEntity asset = await PhotoManager.editor.saveImageWithPath(
-      file.path,
-    );
-
-    setState(() {
-      _selectedList.clear();
-      _selectedList.add(asset);
-    });
-  }
-
   @override
   void initState() {
     super.initState();
@@ -86,10 +73,7 @@ class _PageState extends State<Page> {
   }
 
   Future<void> _loadAlbums() async {
-    final albums = await PhotoManager.getAssetPathList(
-      type: RequestType.common,
-      onlyAll: false,
-    );
+    final albums = await PhotoManager.getAssetPathList(type: RequestType.common, onlyAll: false);
     final List<Map<AssetPathEntity, int>> result = [];
     for (var album in albums) {
       final count = await album.assetCountAsync;
@@ -109,10 +93,7 @@ class _PageState extends State<Page> {
     if (_isLoadingMore || _currentAlbum == null) return;
     setState(() => _isLoadingMore = true);
 
-    final newMedia = await _currentAlbum!.getAssetListPaged(
-      page: _page,
-      size: _pageSize,
-    );
+    final newMedia = await _currentAlbum!.getAssetListPaged(page: _page, size: _pageSize);
 
     setState(() {
       _mediaList.addAll(newMedia);
@@ -122,23 +103,16 @@ class _PageState extends State<Page> {
   }
 
   void _scrollListener() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       _loadMore();
     }
   }
 
-  Future<Uint8List?> _getThumb(
-    AssetEntity asset, {
-    int width = 200,
-    int height = 200,
-  }) async {
+  Future<Uint8List?> _getThumb(AssetEntity asset, {int width = 200, int height = 200}) async {
     if (_thumbCache.containsKey(asset.id)) {
       return _thumbCache[asset.id];
     }
-    final data = await asset.thumbnailDataWithSize(
-      ThumbnailSize(width, height),
-    );
+    final data = await asset.thumbnailDataWithSize(ThumbnailSize(width, height));
     if (data != null) _thumbCache[asset.id] = data;
     return data;
   }
@@ -150,8 +124,7 @@ class _PageState extends State<Page> {
           if (_selectedList.indexOf(asset) == _selectedMediaIndex) {
             _selectedList.remove(asset);
             if (_selectedList.isNotEmpty) {
-              _selectedMediaIndex -=
-                  _selectedMediaIndex == _selectedList.length ? 1 : 0;
+              _selectedMediaIndex -= _selectedMediaIndex == _selectedList.length ? 1 : 0;
             } else {
               _selectedMediaIndex = 0;
             }
@@ -186,6 +159,11 @@ class _PageState extends State<Page> {
     if (mounted) Navigator.pop(context);
   }
 
+  Future<File?> getFile() async {
+    final file = await _selectedList[_selectedMediaIndex].file;
+    return file;
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -202,15 +180,9 @@ class _PageState extends State<Page> {
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pushNamed(
-                    EditMediaScreen.route,
-                    arguments: {'assets': _selectedList},
-                  );
+                  Navigator.of(context).pushNamed(EditMediaScreen.route, arguments: {'assets': _selectedList});
                 },
-                child: Text(
-                  "Xong (${_selectedList.length})",
-                  style: const TextStyle(color: Colors.white),
-                ),
+                child: Text("Xong (${_selectedList.length})", style: const TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -229,11 +201,7 @@ class _PageState extends State<Page> {
                   ? const Center(child: Icon(Icons.image_outlined, size: 80))
                   : _selectedList[_selectedMediaIndex].type == AssetType.image
                   ? FutureBuilder<Uint8List?>(
-                    future: _getThumb(
-                      _selectedList[_selectedMediaIndex],
-                      width: 1000,
-                      height: 1000,
-                    ),
+                    future: _getThumb(_selectedList[_selectedMediaIndex], width: 1000, height: 1000),
                     builder: (_, snapshot) {
                       if (!snapshot.hasData) {
                         return Container(color: Colors.black12);
@@ -241,10 +209,19 @@ class _PageState extends State<Page> {
                       return Image.memory(snapshot.data!, fit: BoxFit.contain);
                     },
                   )
-                  : Video(
-                    key: ValueKey(_selectedList[_selectedMediaIndex].id),
-                    video: _selectedList[_selectedMediaIndex],
-                    shouldPlay: _selectedList.indexOf(_selectedList[_selectedMediaIndex]) == _selectedMediaIndex,
+                  : FutureBuilder<File?>(
+                    future: getFile(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final videoFile = snapshot.data!;
+                      return Video(
+                        key: ValueKey(_selectedList[_selectedMediaIndex].id),
+                        video: videoFile,
+                        shouldPlay: _selectedList.indexOf(_selectedList[_selectedMediaIndex]) == _selectedMediaIndex,
+                      );
+                    },
                   ),
         ),
 
@@ -255,11 +232,7 @@ class _PageState extends State<Page> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextButton.icon(
-                    onPressed: _showAlbumPicker,
-                    icon: const Icon(Icons.keyboard_arrow_down),
-                    label: Text(_albumName),
-                  ),
+                  TextButton.icon(onPressed: _showAlbumPicker, icon: const Icon(Icons.keyboard_arrow_down), label: Text(_albumName)),
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -272,25 +245,13 @@ class _PageState extends State<Page> {
                       padding: EdgeInsets.all(6),
                       margin: EdgeInsets.only(right: 12),
                       decoration: BoxDecoration(
-                        color:
-                            isMultiplyChoice
-                                ? Theme.of(
-                                  context,
-                                ).colorScheme.primary.withAlpha(224)
-                                : Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withAlpha(32),
+                        color: isMultiplyChoice ? Theme.of(context).colorScheme.primary.withAlpha(224) : Theme.of(context).colorScheme.onSurface.withAlpha(32),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.filter_none,
                         size: 16,
-                        color:
-                            isMultiplyChoice
-                                ? AppColors.textLight
-                                : Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withAlpha(224),
+                        color: isMultiplyChoice ? AppColors.textLight : Theme.of(context).colorScheme.onSurface.withAlpha(224),
                       ),
                     ),
                   ),
@@ -299,32 +260,30 @@ class _PageState extends State<Page> {
               Expanded(
                 child: GridView.builder(
                   controller: _scrollController,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 2,
-                    mainAxisSpacing: 2,
-                  ),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, crossAxisSpacing: 2, mainAxisSpacing: 2),
                   itemCount: _mediaList.length + (_isLoadingMore ? 1 : 0),
                   itemBuilder: (_, index) {
                     if (index > _mediaList.length) {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (index == 0) {
-                      return GestureDetector(
-                        onTap: () async {
-                          await _captureAndGetAsset();
+                      return  GestureDetector(
+                        onTap: () {
+                          if(!isMultiplyChoice) {
+                            Navigator.of(context).pushNamed(CameraScreen.route);
+                          }
                         },
-                        child: Container(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surface.withAlpha(224),
-                          child: Icon(
-                            Icons.camera_alt,
-                            size: 56,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withAlpha(224),
-                          ),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Container(
+                                color: Theme.of(context).colorScheme.surface.withAlpha(224),
+                                child: Icon(Icons.camera_alt, size: 56, color: Theme.of(context).colorScheme.onSurface.withAlpha(224)),
+                              ),
+                            ),
+                            if(isMultiplyChoice )
+                              Container(color: Colors.black.withAlpha(70),)
+                          ],
                         ),
                       );
                     }
@@ -340,10 +299,7 @@ class _PageState extends State<Page> {
                               if (!snapshot.hasData) {
                                 return Container(color: Colors.grey[300]);
                               }
-                              return Image.memory(
-                                snapshot.data!,
-                                fit: BoxFit.cover,
-                              );
+                              return Image.memory(snapshot.data!, fit: BoxFit.cover);
                             },
                           ),
                         ),
@@ -356,10 +312,7 @@ class _PageState extends State<Page> {
                                 const SizedBox(width: 4),
                                 Text(
                                   "${(asset.duration ~/ 60).toString().padLeft(2, '0')}:${(asset.duration % 60).toString().padLeft(2, '0')}",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                  ),
+                                  style: const TextStyle(color: Colors.white, fontSize: 11),
                                 ),
                               ],
                             ),
@@ -368,14 +321,7 @@ class _PageState extends State<Page> {
                           Stack(
                             children: [
                               if (_selectedIndex(asset) > 0)
-                                GestureDetector(
-                                  onTap: () => _toggleSelect(asset),
-                                  child: Container(
-                                    color: AppColors.textMutedDark.withAlpha(
-                                      92,
-                                    ),
-                                  ),
-                                ),
+                                GestureDetector(onTap: () => _toggleSelect(asset), child: Container(color: AppColors.textMutedDark.withAlpha(92))),
                               Positioned(
                                 top: 4,
                                 right: 4,
@@ -384,22 +330,8 @@ class _PageState extends State<Page> {
                                         ? Container(
                                           width: 26,
                                           height: 26,
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Theme.of(
-                                                  context,
-                                                ).colorScheme.primary,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              "${_selectedIndex(asset)}",
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ),
+                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
+                                          child: Center(child: Text("${_selectedIndex(asset)}", style: const TextStyle(color: Colors.white, fontSize: 12))),
                                         )
                                         : Container(
                                           width: 24,
@@ -407,10 +339,7 @@ class _PageState extends State<Page> {
                                           decoration: BoxDecoration(
                                             color: Colors.grey.withAlpha(64),
                                             shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: AppColors.textLight,
-                                              width: 1,
-                                            ),
+                                            border: Border.all(color: AppColors.textLight, width: 1),
                                           ),
                                         ),
                               ),
@@ -419,14 +348,7 @@ class _PageState extends State<Page> {
                         else
                           GestureDetector(
                             onTap: () => _toggleSelect(asset),
-                            child:
-                                _selectedIndex(asset) > 0
-                                    ? Container(
-                                      color: AppColors.textMutedDark.withAlpha(
-                                        92,
-                                      ),
-                                    )
-                                    : null,
+                            child: _selectedIndex(asset) > 0 ? Container(color: AppColors.textMutedDark.withAlpha(92)) : null,
                           ),
                       ],
                     );
@@ -449,24 +371,12 @@ class _PageState extends State<Page> {
         child: Container(
           height: 50,
           width: MediaQuery.of(context).size.width * 0.7,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
-            color: Theme.of(context).colorScheme.surface.withAlpha(240),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(32), color: Theme.of(context).colorScheme.surface.withAlpha(240)),
           child: CarouselSlider(
             items: [
-              Center(
-                child: Text(
-                  'Bài đăng',
-                  style: AppTextStyles.subHeadline(context),
-                ),
-              ),
-              Center(
-                child: Text('Reels', style: AppTextStyles.subHeadline(context)),
-              ),
-              Center(
-                child: Text('Tin', style: AppTextStyles.subHeadline(context)),
-              ),
+              Center(child: Text('Bài đăng', style: AppTextStyles.subHeadline(context))),
+              Center(child: Text('Reels', style: AppTextStyles.subHeadline(context))),
+              Center(child: Text('Tin', style: AppTextStyles.subHeadline(context))),
             ],
             options: CarouselOptions(
               height: 50,
@@ -500,14 +410,7 @@ class _PageState extends State<Page> {
               child: Column(
                 children: [
                   const SizedBox(height: 8),
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2))),
                   const SizedBox(height: 16),
 
                   // 3 nút chọn chế độ lọc
@@ -519,11 +422,7 @@ class _PageState extends State<Page> {
                         label: "Gần đây",
                         onTap: () async {
                           _albumName = "Gần đây";
-                          _currentAlbum =
-                              (await PhotoManager.getAssetPathList(
-                                type: RequestType.common,
-                                onlyAll: true,
-                              )).first;
+                          _currentAlbum = (await PhotoManager.getAssetPathList(type: RequestType.common, onlyAll: true)).first;
                           await _loadInitialMedia();
                           if (context.mounted) Navigator.pop(context);
                         },
@@ -533,11 +432,7 @@ class _PageState extends State<Page> {
                         label: "Ảnh",
                         onTap: () async {
                           _albumName = "Ảnh";
-                          _currentAlbum =
-                              (await PhotoManager.getAssetPathList(
-                                type: RequestType.image,
-                                onlyAll: true,
-                              )).first;
+                          _currentAlbum = (await PhotoManager.getAssetPathList(type: RequestType.image, onlyAll: true)).first;
                           await _loadInitialMedia();
                           if (context.mounted) Navigator.pop(context);
                         },
@@ -547,11 +442,7 @@ class _PageState extends State<Page> {
                         label: "Video",
                         onTap: () async {
                           _albumName = "Video";
-                          _currentAlbum =
-                              (await PhotoManager.getAssetPathList(
-                                type: RequestType.video,
-                                onlyAll: true,
-                              )).first;
+                          _currentAlbum = (await PhotoManager.getAssetPathList(type: RequestType.video, onlyAll: true)).first;
                           await _loadInitialMedia();
                           if (context.mounted) Navigator.pop(context);
                         },
@@ -566,80 +457,48 @@ class _PageState extends State<Page> {
                     child: GridView.builder(
                       controller: scrollController,
                       padding: const EdgeInsets.all(8),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                            childAspectRatio: 0.75,
-                          ),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 0.75,
+                      ),
                       itemCount: _albums.length,
                       itemBuilder: (context, index) {
                         final album = _albums[index];
                         final albumEntity = album.keys.first;
                         final count = album.values.first;
-                        final albumNameSafe =
-                            albumEntity.name.isNotEmpty
-                                ? albumEntity.name
-                                : "Không tên";
+                        final albumNameSafe = albumEntity.name.isNotEmpty ? albumEntity.name : "Không tên";
 
                         return FutureBuilder<List<AssetEntity>>(
-                          future: albumEntity.getAssetListRange(
-                            start: 0,
-                            end: 1,
-                          ),
+                          future: albumEntity.getAssetListRange(start: 0, end: 1),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return _buildAlbumPlaceholder(
-                                albumNameSafe,
-                                count,
-                              );
+                              return _buildAlbumPlaceholder(albumNameSafe, count);
                             }
                             final firstAsset = snapshot.data!.first;
                             return FutureBuilder<Uint8List?>(
-                              future: firstAsset.thumbnailDataWithSize(
-                                const ThumbnailSize(300, 300),
-                              ),
+                              future: firstAsset.thumbnailDataWithSize(const ThumbnailSize(300, 300)),
                               builder: (context, thumbSnap) {
                                 if (!thumbSnap.hasData) {
-                                  return _buildAlbumPlaceholder(
-                                    albumNameSafe,
-                                    count,
-                                  );
+                                  return _buildAlbumPlaceholder(albumNameSafe, count);
                                 }
                                 return GestureDetector(
                                   onTap: () async {
                                     _chooseAlbum(albumEntity);
                                   },
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Expanded(
                                         child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          child: Image.memory(
-                                            thumbSnap.data!,
-                                            fit: BoxFit.cover,
-                                            width: double.infinity,
-                                          ),
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.memory(thumbSnap.data!, fit: BoxFit.cover, width: double.infinity),
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      Text(
-                                        albumNameSafe,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        "$count mục",
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
+                                      Text(albumNameSafe, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                      Text("$count mục", style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                     ],
                                   ),
                                 );
@@ -659,20 +518,12 @@ class _PageState extends State<Page> {
     );
   }
 
-  Widget _buildFilterButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildFilterButton({required IconData icon, required String label, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: Colors.grey[200],
-            child: Icon(icon, color: Colors.black87),
-          ),
+          CircleAvatar(radius: 26, backgroundColor: Colors.grey[200], child: Icon(icon, color: Colors.black87)),
           const SizedBox(height: 4),
           Text(label, style: const TextStyle(fontSize: 12)),
         ],
@@ -684,97 +535,11 @@ class _PageState extends State<Page> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Container(color: Colors.grey[300]),
-          ),
-        ),
+        Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(8), child: Container(color: Colors.grey[300]))),
         const SizedBox(height: 4),
-        Text(
-          name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 14),
-        ),
-        Text(
-          "$count mục",
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
-        ),
+        Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
+        Text("$count mục", style: const TextStyle(fontSize: 12, color: Colors.grey)),
       ],
     );
-  }
-}
-
-class Video extends StatefulWidget {
-  final AssetEntity video;
-  final bool shouldPlay; // điều kiện phát video
-
-  const Video({super.key, required this.video, required this.shouldPlay});
-
-  @override
-  State<Video> createState() => _VideoState();
-}
-
-class _VideoState extends State<Video> {
-  VideoPlayerController? _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _initVideo();
-  }
-
-  Future<void> _initVideo() async {
-    final file = await widget.video.file;
-    if (file != null) {
-      _controller =
-          VideoPlayerController.file(file)
-            ..setLooping(true)
-            ..initialize().then((_) {
-              if (mounted) {
-                setState(() {});
-                if (widget.shouldPlay) {
-                  _controller!.play();
-                }
-              }
-            });
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant Video oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // Nếu video thay đổi, khởi tạo lại
-    if (oldWidget.video.id != widget.video.id) {
-      _controller?.dispose();
-      _controller = null;
-      _initVideo();
-    } else if (oldWidget.shouldPlay != widget.shouldPlay) {
-      // Khi điều kiện phát thay đổi
-      if (widget.shouldPlay) {
-        _controller?.play();
-      } else {
-        _controller?.pause();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_controller != null && _controller!.value.isInitialized) {
-      return AspectRatio(
-        aspectRatio: _controller!.value.aspectRatio,
-        child: VideoPlayer(_controller!),
-      );
-    }
-    return const Center(child: CircularProgressIndicator());
   }
 }

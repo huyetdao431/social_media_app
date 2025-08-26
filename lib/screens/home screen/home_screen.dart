@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_media_app/screens/add_story_screen/add_story_screen.dart';
 
 import '../../commons/widgets/post.dart';
 
@@ -85,7 +86,7 @@ class _StoryState extends State<Story> {
           children: [
             GestureDetector(
               onTap: () {
-                print('onTap');
+                Navigator.of(context).pushNamed(AddStoryScreen.route);
               },
               child: Stack(
                 children: [
