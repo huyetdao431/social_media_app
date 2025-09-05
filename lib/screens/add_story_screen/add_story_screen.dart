@@ -1,12 +1,12 @@
-import 'dart:io';
-
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:pro_image_editor/pro_image_editor.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:social_media_app/materials/app_colors.dart';
 
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_media_app/screens/add_story_screen/edit_story_screen.dart';
 
+import '../../cubit/story_cubit/story_cubit.dart';
 import '../add_post_screen/camera_screen.dart';
 
 class AddStoryScreen extends StatelessWidget {
@@ -16,7 +16,7 @@ class AddStoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(data: ThemeData.dark(), child: Page());
+    return BlocProvider(create: (context) => StoryCubit(), child: Theme(data: ThemeData.dark(), child: Page()));
   }
 }
 
@@ -92,7 +92,7 @@ class _GalleryWidgetState extends State<GalleryWidget> {
   final int _pageSize = 60;
   final ScrollController _scrollController = ScrollController();
 
-  /// ✅ cache thumbnail để tránh load lại nhiều lần
+  /// cache thumbnail để tránh load lại nhiều lần
   final Map<String, Uint8List?> _thumbCache = {};
 
   @override
@@ -150,9 +150,9 @@ class _GalleryWidgetState extends State<GalleryWidget> {
   }
 
   Future<Uint8List?> _getThumb(AssetEntity asset) async {
-    if (_thumbCache.containsKey(asset.id)) return _thumbCache[asset.id]; // ✅ lấy từ cache
+    if (_thumbCache.containsKey(asset.id)) return _thumbCache[asset.id]; // lấy từ cache
     final data = await asset.thumbnailDataWithSize(const ThumbnailSize(300, 300));
-    _thumbCache[asset.id] = data; // ✅ lưu vào cache
+    _thumbCache[asset.id] = data; // lưu vào cache
     return data;
   }
 
@@ -179,116 +179,92 @@ class _GalleryWidgetState extends State<GalleryWidget> {
     super.dispose();
   }
 
-  Future<void> _openCrop(int index) async {
-    final file = await _mediaList[index].file;
-    final imageBytes = await file!.readAsBytes();
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CropRotateEditor.memory(
-          imageBytes,
-          initConfigs: CropRotateEditorInitConfigs(
-            theme: Theme.of(context),
-            convertToUint8List: true,       // pop về Uint8List
-            enablePopWhenDone: true,        // bấm Done sẽ pop
-            configs: ProImageEditorConfigs(
-              cropRotateEditor: CropRotateEditorConfigs(
-                showRotateButton: false,    // chỉ cho cắt
-                showFlipButton: false,
-                showAspectRatioButton: true,
-                initAspectRatio: 9/16,       // tỉ lệ mặc định 1:1
-                aspectRatios: const [
-                  AspectRatioItem(value: 9/16, text: '9/16'),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    // if (result is Uint8List) {
-    //   setState(() => _croppedBytes = result);
-    //   // TODO: cập nhật Cubit/BLoC hoặc lưu ảnh
-    // }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return _loading
-        ? const Center(child: CircularProgressIndicator())
-        : Column(
-      children: [
-        // Album picker
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [TextButton.icon(onPressed: _showAlbumPicker, icon: const Icon(Icons.keyboard_arrow_down), label: Text(_albumName))],
-        ),
+    return BlocBuilder<StoryCubit, StoryState>(
+      builder: (context, state) {
+        var cubit = context.read<StoryCubit>();
+        return _loading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+              children: [
+                // Album picker
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [TextButton.icon(onPressed: _showAlbumPicker, icon: const Icon(Icons.keyboard_arrow_down), label: Text(_albumName))],
+                ),
 
-        // GridView media
-        Expanded(
-          child: GridView.builder(
-            controller: _scrollController,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 2,
-              crossAxisSpacing: 2,
-              childAspectRatio: 9 / 16, // tỉ lệ 9:16
-            ),
-            itemCount: _mediaList.length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                // cell đầu tiên mở Camera
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pushNamed(CameraScreen.route);
-                  },
-                  child: Container(color: Colors.black26, child: const Icon(Icons.camera_alt, size: 40)),
-                );
-              }
-              final asset = _mediaList[index - 1];
-              return FutureBuilder<Uint8List?>(
-                future: _getThumb(asset),
-                builder: (_, snapshot) {
-                  if (!snapshot.hasData) {
-                    return Container(color: Colors.grey[300]);
-                  }
-                  return Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      GestureDetector(onTap:() => _openCrop(index-1),child: Image.memory(snapshot.data!, fit: BoxFit.cover)),
+                // GridView media
+                Expanded(
+                  child: GridView.builder(
+                    controller: _scrollController,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 2,
+                      childAspectRatio: 9 / 16, // tỉ lệ 9:16
+                    ),
+                    itemCount: _mediaList.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        // cell đầu tiên mở Camera
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pushNamed(CameraScreen.route);
+                          },
+                          child: Container(color: Colors.black26, child: const Icon(Icons.camera_alt, size: 40)),
+                        );
+                      }
+                      final asset = _mediaList[index - 1];
+                      return FutureBuilder<Uint8List?>(
+                        future: _getThumb(asset),
+                        builder: (_, snapshot) {
+                          if (!snapshot.hasData) {
+                            return Container(color: Colors.grey[300]);
+                          }
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              GestureDetector(
+                                onTap: () async{
+                                  cubit.setSelectedMedia(asset);
+                                  await cubit.loadData();
+                                  if(!context.mounted) return;
+                                  Navigator.of(context).pushNamed(EditStoryScreen.route, arguments: {'cubit': cubit});
+                                },
+                                child: Image.memory(snapshot.data!, fit: BoxFit.cover),
+                              ),
 
-                      // ✅ overlay icon + thời lượng cho video
-                      if (asset.type == AssetType.video)
-                        Positioned(
-                          bottom: 4,
-                          right: 4,
-                          left: 4,
-                          child: Text(
-                            _formatDuration(asset.videoDuration),
-                            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ],
+                              // overlay icon + thời lượng cho video
+                              if (asset.type == AssetType.video)
+                                Positioned(
+                                  bottom: 4,
+                                  right: 4,
+                                  left: 4,
+                                  child: Text(
+                                    _formatDuration(asset.videoDuration),
+                                    style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+      },
     );
   }
 
-  /// ✅ format duration video thành 00:00
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return "$minutes:$seconds";
   }
-
-  // ================= ALBUM PICKER ==================
 
   void _showAlbumPicker() {
     showModalBottomSheet(
@@ -344,7 +320,7 @@ class _GalleryWidgetState extends State<GalleryWidget> {
                             }
                             final firstAsset = snapshot.data!.first;
                             return FutureBuilder<Uint8List?>(
-                              future: _getThumb(firstAsset), // ✅ dùng cache luôn
+                              future: _getThumb(firstAsset), //  dùng cache luôn
                               builder: (context, thumbSnap) {
                                 if (!thumbSnap.hasData) {
                                   return _buildAlbumPlaceholder(albumNameSafe, count);

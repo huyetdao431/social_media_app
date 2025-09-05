@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_media_app/commons/enums/load_status.dart';
 import 'package:image/image.dart' as img;
+import 'package:social_media_app/commons/helpers/helper.dart';
 
 part 'post_state.dart';
 
@@ -114,32 +115,15 @@ class PostCubit extends Cubit<PostState> {
     try {
       for(int i = 0; i < state.assets.length; i++) {
         if(state.selectedAssets[i].type == AssetType.image) {
-          await saveImageToGallery(state.assets[i]);
+          await Helper.saveImageToGallery(state.assets[i]);
         } else {
-          await saveVideoToGallery(state.assets[i]);
+          await Helper.saveVideoToGallery(state.assets[i]);
         }
       }
     } catch(e) {
       emit(state.copyWith(loadStatus: LoadStatus.error));
     }
   }
-
-  Future<void> saveImageToGallery(File imageFile) async {
-    await PhotoManager.editor.saveImageWithPath(
-      imageFile.path,
-      title: "edited_${DateTime.now().millisecondsSinceEpoch}.png",
-      relativePath: 'social_media_app',
-    );
-  }
-
-  Future<void> saveVideoToGallery(File videoFile) async {
-    await PhotoManager.editor.saveVideo(
-      videoFile,
-      title: "edited_${DateTime.now().millisecondsSinceEpoch}.mp4",
-      relativePath: 'social_media_app',
-    );
-  }
-
 
   void updateAspectRatio(double aspectRatio) {
     emit(state.copyWith(aspectRatio: aspectRatio));
