@@ -18,6 +18,7 @@ import 'package:social_media_app/screens/auth_screen/login_screen.dart';
 import 'package:social_media_app/screens/main_screen/main_screen.dart';
 import 'package:social_media_app/screens/post_list_screen/post_list_screen.dart';
 import 'package:social_media_app/screens/search_screen/search_screen.dart';
+import 'package:social_media_app/screens/story_screen/story_screen.dart';
 
 Route<dynamic>? mainRoute(RouteSettings settings) {
   switch (settings.name) {
@@ -57,6 +58,8 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case EditStoryScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as StoryCubit;
       return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: EditStoryScreen()));
+    case StoryScreen.route:
+      return MaterialPageRoute(builder: (context) => StoryScreen());
     default:
       return MaterialPageRoute(builder: (context) => Container());
   }

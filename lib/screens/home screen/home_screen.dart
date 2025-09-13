@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:social_media_app/screens/add_story_screen/add_story_screen.dart';
+import 'package:social_media_app/screens/story_screen/story_screen.dart';
 
 import '../../commons/widgets/post.dart';
 
@@ -123,6 +124,7 @@ class _StoryState extends State<Story> {
                   onTap: () {
                     setState(() {
                       isWatched[i] = true;
+                      Navigator.of(context).pushNamed(StoryScreen.route);
                     });
                   },
                   child: Stack(
