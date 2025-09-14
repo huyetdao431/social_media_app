@@ -51,6 +51,9 @@ dependencies:
   video_player: ^2.10.0
   easy_video_editor: ^0.1.2
   pro_video_editor: ^0.2.3
+  supabase_flutter: ^2.10.0
+  google_sign_in: ^6.2.1
+  flutter_facebook_auth: ^7.1.2
 
 dev_dependencies:
   flutter_test:

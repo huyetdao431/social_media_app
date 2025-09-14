@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Social Media App</string>
+    <!-- Facebook Login config -->
+    <string name="facebook_app_id">780534954700842</string>
+    <string name="fb_login_protocol_scheme">fb780534954700842</string>
+    <string name="facebook_client_token">3bf09f6902246af889f3b5e083ac7e44</string>
+</resources>
