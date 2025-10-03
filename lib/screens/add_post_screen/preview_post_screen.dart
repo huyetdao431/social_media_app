@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -6,89 +8,153 @@ import 'package:social_media_app/materials/app_colors.dart';
 
 import '../../commons/widgets/display_video.dart';
 
+/// Refactored Instagram-like preview screen
+/// - preview occupies top 1/2 of the screen
+/// - within that area, media frame is sized according to PostState.aspectRatio
+///   (falls back to 1.0 if null). The media is centered inside the top half.
+/// - media displayed via PageView with PageController(viewportFraction: 0.7)
 class PreviewPostScreen extends StatelessWidget {
   static const String route = 'PreviewPostScreen';
 
   const PreviewPostScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Theme(data: ThemeData.dark(), child: Page());
+  Widget build(BuildContext context) => Theme(data: ThemeData.dark(), child: const _PreviewPostPage());
+}
+
+class _PreviewPostPage extends StatefulWidget {
+  const _PreviewPostPage({super.key});
+
+  @override
+  State<_PreviewPostPage> createState() => _PreviewPostPageState();
+}
+
+class _PreviewPostPageState extends State<_PreviewPostPage> {
+  final TextEditingController _captionController = TextEditingController();
+  final PageController _pageController = PageController(viewportFraction: 0.7);
+  int _selectedIndex = 0;
+
+  @override
+  void dispose() {
+    _captionController.dispose();
+    _pageController.dispose();
+    super.dispose();
   }
-}
 
-class Page extends StatefulWidget {
-  const Page({super.key});
-
-  @override
-  State<Page> createState() => _PageState();
-}
-
-class _PageState extends State<Page> {
-  TextEditingController caption = TextEditingController(text: '');
+  void _onShare(BuildContext context) {
+    final cubit = context.read<PostCubit>();
+    // cubit.createPost(caption: _captionController.text.trim());
+    Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PostCubit, PostState>(
-      builder: (context, state) {
-        var cubit = context.read<PostCubit>();
-        return Scaffold(
-          appBar: AppBar(title: Text('bai viet moi')),
-          body: SizedBox(
-            height: MediaQuery.sizeOf(context).height,
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      //page view hien thi anh va video,
-                      SizedBox(height: MediaQuery.sizeOf(context).width * 0.7, child: PostMediaView()),
-                      //text field
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16),
-                        child: TextField(controller: caption, decoration: InputDecoration(hintText: 'Add a caption...', border: InputBorder.none)),
-                      ),
-                      //label chuc nang
-                      for (int i = 0; i < 5; i++) _buildNavigatorLabel(context, Icon(Icons.add, size: 32), 'add', () {}),
-                    ],
+    return BlocBuilder<PostCubit, PostState>(builder: (context, state) {
+      final cubit = context.read<PostCubit>();
+      final assets = cubit.state.assets; // assumed: List<Map> with 'file'
+      final selectedAssets = cubit.state.selectedAssets; // List<AssetEntity>
+
+      final screen = MediaQuery.of(context).size;
+
+      // Top half height
+      final double hei = screen.width * 0.7 / cubit.state.aspectRatio;
+
+      // aspectRatio from state (width / height). fallback 1.0
+      final double aspectRatio = (cubit.state.aspectRatio ?? 1.0) > 0 ? (cubit.state.aspectRatio ?? 1.0) : 1.0;
+
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Bài viết mới'),
+          backgroundColor: Colors.transparent,
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // TOP: preview area occupies half screen
+              SizedBox(
+                height: hei,
+                width: double.infinity,
+                child: _MediaCarousel(
+                  pageController: _pageController,
+                  assets: assets,
+                  selectedAssets: selectedAssets,
+                  onPageChanged: (idx) => setState(() => _selectedIndex = idx),
+                  selectedIndex: _selectedIndex,
+                  aspectRatio: aspectRatio,
+                  maxAreaHeight: hei,
+                ),
+              ),
+
+              // caption
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
+                child: TextField(
+                  controller: _captionController,
+                  maxLines: null,
+                  decoration: const InputDecoration(
+                    hintText: 'Viết chú thích...',
+                    border: InputBorder.none,
                   ),
                 ),
-                Positioned(
-                  bottom: 0,
-                  left: 12,
-                  right: 12,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                      decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(10)),
-                      child: Center(child: Text('Share', style: TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w900, fontSize: 14))),
-                    ),
-                  ),
+              ),
+
+              // action labels
+              Expanded(
+                child: ListView(
+                  children: [
+                    _ActionRow(icon: Icons.person_add, label: 'Gắn thẻ người', onTap: () {}),
+                    _ActionRow(icon: Icons.location_on_outlined, label: 'Thêm địa điểm', onTap: () {}),
+                    _ActionRow(icon: Icons.more_horiz, label: 'Tùy chọn khác', onTap: () {}),
+                    const SizedBox(height: 80),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
-    );
+        ),
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _onShare(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('Chia sẻ', style: TextStyle(fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
   }
+}
 
-  Widget _buildNavigatorLabel(BuildContext context, Icon icon, String label, VoidCallback onTap) {
-    return GestureDetector(
+class _ActionRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ActionRow({required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        height: 54,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        height: 56,
         child: Row(
-          mainAxisSize: MainAxisSize.max,
           children: [
-            Expanded(
-              child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [icon, const SizedBox(width: 8), Text(label, style: TextStyle(fontSize: 17))]),
-            ),
-            Icon(Icons.navigate_next),
+            Icon(icon, size: 28),
+            const SizedBox(width: 12),
+            Expanded(child: Text(label, style: const TextStyle(fontSize: 16))),
+            const Icon(Icons.navigate_next),
           ],
         ),
       ),
@@ -96,60 +162,128 @@ class _PageState extends State<Page> {
   }
 }
 
-class PostMediaView extends StatefulWidget {
-  const PostMediaView({super.key});
+class _MediaCarousel extends StatelessWidget {
+  final PageController pageController;
+  final List assets;
+  final List<AssetEntity> selectedAssets;
+  final ValueChanged<int> onPageChanged;
+  final int selectedIndex;
+  final double aspectRatio;
+  final double maxAreaHeight;
 
-  @override
-  State<PostMediaView> createState() => _PostMediaViewState();
-}
-
-class _PostMediaViewState extends State<PostMediaView> {
-  final PageController _controller = PageController(viewportFraction: 0.8);
-  int selectedIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const _MediaCarousel({
+    required this.pageController,
+    required this.assets,
+    required this.selectedAssets,
+    required this.onPageChanged,
+    required this.selectedIndex,
+    required this.aspectRatio,
+    required this.maxAreaHeight,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PostCubit, PostState>(
-      builder: (context, state) {
-        var cubit = context.read<PostCubit>();
-        return PageView.builder(
-          controller: _controller,
-          itemCount: cubit.state.assets.length,
-          onPageChanged: (index) {
-            setState(() {
-              selectedIndex = index;
-            });
-          },
-          itemBuilder: (context, index) {
-            return Container(
-              width: MediaQuery.sizeOf(context).width * 0.7,
-              height: MediaQuery.sizeOf(context).width * 0.7,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-              clipBehavior: Clip.hardEdge,
-              child:
-                  cubit.state.selectedAssets[index].type == AssetType.image
-                      ? Image.file(cubit.state.assets[index], fit: BoxFit.cover)
-                      : Video(
-                        key: ValueKey(cubit.state.selectedAssets[index].id),
-                        video: cubit.state.assets[index],
-                        shouldPlay: cubit.state.assets.indexOf(cubit.state.assets[index]) == selectedIndex,
+    if (assets.isEmpty) {
+      return const Center(child: Text('Không có ảnh hoặc video', style: TextStyle(color: Colors.white)));
+    }
+
+    return LayoutBuilder(builder: (context, constraints) {
+      final double maxWidth = constraints.maxWidth;
+      final double maxHeight = maxAreaHeight; // half screen
+
+      // PageController's viewportFraction controls visible portion horizontally (set in parent controller)
+      // We compute a base item width using viewportFraction, but adjust if aspectRatio would exceed maxHeight.
+      final double viewportFraction = (pageController.viewportFraction > 0)
+          ? pageController.viewportFraction
+          : 0.7;
+
+      double itemWidth = maxWidth * viewportFraction;
+      double itemHeight = itemWidth / aspectRatio;
+
+      if (itemHeight > maxHeight) {
+        itemHeight = maxHeight;
+        itemWidth = itemHeight * aspectRatio;
+      }
+
+      return Column(
+        children: [
+          SizedBox(
+            height: maxHeight - 24,
+            child: Center(
+              child: PageView.builder(
+                controller: pageController,
+                itemCount: assets.length,
+                onPageChanged: onPageChanged,
+                padEnds: true,
+                itemBuilder: (context, index) {
+                  final asset = selectedAssets.length > index ? selectedAssets[index] : null;
+                  final file = assets[index]['file'] as File?;
+
+                  return Center(
+                    child: SizedBox(
+                      width: itemWidth,
+                      height: itemHeight,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 6),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            color: Colors.black,
+                            width: double.infinity,
+                            height: double.infinity,
+                            child: file == null
+                                ? const SizedBox()
+                                : asset?.type == AssetType.image
+                                ? Image.file(file, fit: BoxFit.cover, width: double.infinity, height: double.infinity)
+                                : Video(
+                              key: ValueKey(asset?.id ?? index),
+                              video: file,
+                              shouldPlay: index == selectedIndex,
+                            ),
+                          ),
+                        ),
                       ),
-            );
-          },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+
+          // dot indicator
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: _DotIndicator(length: assets.length, active: selectedIndex),
+          ),
+        ],
+      );
+    });
+  }
+}
+
+class _DotIndicator extends StatelessWidget {
+  final int length;
+  final int active;
+
+  const _DotIndicator({required this.length, required this.active});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(length, (i) {
+        final isActive = i == active;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: isActive ? 18 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: isActive ? AppColors.primary : Colors.white24,
+            borderRadius: BorderRadius.circular(8),
+          ),
         );
-      },
+      }),
     );
   }
 }

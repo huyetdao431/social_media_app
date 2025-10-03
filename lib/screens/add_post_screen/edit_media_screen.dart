@@ -12,13 +12,12 @@ import 'edit_image_screen.dart';
 
 class EditMediaScreen extends StatelessWidget {
   static const String route = 'EditMediaScreen';
-  final List<AssetEntity> assets;
 
-  const EditMediaScreen({super.key, required this.assets});
+  const EditMediaScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Theme(data: ThemeData.dark(), child: BlocProvider(create: (context) => PostCubit()..loadData(assets), child: const Page()));
+    return Theme(data: ThemeData.dark(), child: const Page());
   }
 }
 
@@ -169,12 +168,12 @@ class _PageState extends State<Page> {
                                                   decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
                                                   clipBehavior: Clip.hardEdge,
                                                   child:
-                                                      cubit.state.selectedAssets[index].type == AssetType.image
-                                                          ? Image.file(cubit.state.assets[index], fit: BoxFit.cover)
+                                                      cubit.state.assets[index]['type'] == 'image'
+                                                          ? Image.file(cubit.state.assets[index]['file'], fit: BoxFit.cover)
                                                           : Video(
                                                             key: ValueKey(cubit.state.selectedAssets[index].id),
-                                                            video: cubit.state.assets[index],
-                                                            shouldPlay: cubit.state.assets.indexOf(cubit.state.assets[index]) == cubit.state.selectedIndex,
+                                                            video: cubit.state.assets[index]['file'],
+                                                            shouldPlay: index == cubit.state.selectedIndex,
                                                           ),
                                                 ),
 
@@ -261,7 +260,7 @@ class _PageState extends State<Page> {
                                 clipBehavior: Clip.hardEdge,
                                 child: Stack(
                                   children: [
-                                    Opacity(opacity: 0.5, child: Image.file(cubit.state.assets[cubit.state.selectedIndex], fit: BoxFit.cover)),
+                                    Opacity(opacity: 0.5, child: Image.file(cubit.state.assets[cubit.state.selectedIndex]['file'], fit: BoxFit.cover)),
                                     Center(child: Icon(Icons.add, color: AppColors.textLight)),
                                   ],
                                 ),

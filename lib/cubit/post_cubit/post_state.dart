@@ -3,7 +3,7 @@ part of 'post_cubit.dart';
 class PostState {
   final LoadStatus loadStatus;
   final List<AssetEntity> selectedAssets;
-  final List<File> assets;
+  final List<Map<String, dynamic>> assets;
   final List<int> editedAssetIndex;
   final double aspectRatio;
   final int selectedIndex;
@@ -58,7 +58,7 @@ class PostState {
   PostState copyWith({
     LoadStatus? loadStatus,
     List<AssetEntity>? selectedAssets,
-    List<File>? assets,
+    List<Map<String, dynamic>>? assets,
     List<int>? editedAssetIndex,
     double? aspectRatio,
     int? selectedIndex,
@@ -88,7 +88,7 @@ class PostState {
     return PostState(
       loadStatus: map['loadStatus'] as LoadStatus,
       selectedAssets: map['selectedAssets'] as List<AssetEntity>,
-      assets: map['assets'] as List<File>,
+      assets: map['assets'] as List<Map<String, dynamic>>,
       editedAssetIndex: map['editedAssetIndex'] as List<int>,
       aspectRatio: map['aspectRatio'] as double,
       selectedIndex: map['selectedIndex'] as int,

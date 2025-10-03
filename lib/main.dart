@@ -2,9 +2,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:social_media_app/materials/app_theme.dart';
 import 'package:social_media_app/routes.dart';
-import 'package:social_media_app/screens/main_screen/main_screen.dart';
+import 'package:social_media_app/screens/splash_screen/splash_screen.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
 import 'package:social_media_app/services/repositories/api/api_impl.dart';
 import 'package:social_media_app/services/repositories/log/log.dart';
@@ -12,6 +13,7 @@ import 'package:social_media_app/services/repositories/log/log_impl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cubit/main_cubit/main_cubit.dart';
+import 'models/profile/profiles.dart';
 
 class SimpleBlocObserver extends BlocObserver {
   const SimpleBlocObserver();
@@ -61,6 +63,10 @@ void main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4cmd6aHF2bHZxaGxyb3VhY3VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NDc3MDUsImV4cCI6MjA3MzMyMzcwNX0.q_jDGODJk7EZ1NGX14-_Hbg4czWRCZ6FI-lvl4vK2tc',
   );
+  await Hive.initFlutter();
+  Hive.registerAdapter(ProfileAdapter()); // adapter do build_runner sinh ra
+  await Hive.openBox<Profile>('profiles');
+
   runApp(RepositoryProvider<Log>(create: (context) => LogImpl(), child: Repository()));
 }
 
@@ -69,7 +75,10 @@ class Repository extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider<Api>(create: (context) => ApiImpl(context.read<Log>()), child: BlocProvider(create: (context) => MainCubit(), child: Provider()));
+    return RepositoryProvider<Api>(
+      create: (context) => ApiImpl(context.read<Log>()),
+      child: BlocProvider(create: (context) => MainCubit(context.read<Api>())..getTheme(), child: Provider()),
+    );
   }
 }
 
@@ -88,7 +97,7 @@ class Provider extends StatelessWidget {
             darkTheme: AppTheme.dark,
             themeMode: state.isLightTheme ? ThemeMode.light : ThemeMode.dark,
             onGenerateRoute: mainRoute,
-            initialRoute: MainScreen.route,
+            initialRoute: SplashScreen.route,
           );
         },
       ),

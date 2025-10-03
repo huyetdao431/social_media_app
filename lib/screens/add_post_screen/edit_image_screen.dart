@@ -43,7 +43,7 @@ class _PageState extends State<Page> {
         return cubit.state.loadStatus == LoadStatus.loading
             ? Center(child: CircularProgressIndicator())
             : ProImageEditor.file(
-          cubit.state.assets[cubit.state.selectedIndex],
+          cubit.state.assets[cubit.state.selectedIndex]['file'],
           callbacks: ProImageEditorCallbacks(
               onImageEditingComplete: (result) async{
                 final croppedImage = await cubit.cropImage(result);

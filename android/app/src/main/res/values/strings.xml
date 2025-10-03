@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Social Media App</string>
     <!-- Facebook Login config -->
-    <string name="facebook_app_id">780534954700842</string>
-    <string name="fb_login_protocol_scheme">fb780534954700842</string>
-    <string name="facebook_client_token">3bf09f6902246af889f3b5e083ac7e44</string>
+    <string name="facebook_app_id">2226592987817826</string>
+    <string name="fb_login_protocol_scheme">fb2226592987817826</string>
+    <string name="facebook_client_token">e8fce4c5c270ffa5119afe258a92c9ee</string>
 </resources>

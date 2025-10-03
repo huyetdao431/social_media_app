@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +8,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:social_media_app/screens/add_story_screen/edit_story_screen.dart';
 
 import '../../cubit/story_cubit/story_cubit.dart';
-import '../add_post_screen/camera_screen.dart';
+import '../../commons/widgets/camera_screen.dart';
 
 class AddStoryScreen extends StatelessWidget {
   static const String route = 'AddStoryScreen';
@@ -209,8 +210,15 @@ class _GalleryWidgetState extends State<GalleryWidget> {
                       if (index == 0) {
                         // cell đầu tiên mở Camera
                         return GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pushNamed(CameraScreen.route);
+                          onTap: () async {
+                            final result = await Navigator.of(context).pushNamed(CameraScreen.route) as Map<String, dynamic>;
+                            final file = result['file'] as File;
+                            final mediaType = result['mediaType'] as String;
+                            if (context.mounted) {
+                              context.read<StoryCubit>().setMediaType(mediaType);
+                              context.read<StoryCubit>().getStoryMediaFromCamera(file);
+                              Navigator.of(context).pushNamed(EditStoryScreen.route, arguments: {'cubit': cubit});
+                            }
                           },
                           child: Container(color: Colors.black26, child: const Icon(Icons.camera_alt, size: 40)),
                         );
@@ -226,10 +234,10 @@ class _GalleryWidgetState extends State<GalleryWidget> {
                             fit: StackFit.expand,
                             children: [
                               GestureDetector(
-                                onTap: () async{
-                                  cubit.setSelectedMedia(asset);
-                                  await cubit.loadData();
-                                  if(!context.mounted) return;
+                                onTap: () async {
+                                  cubit.setMediaType(asset.type == AssetType.image ? 'image' : 'video');
+                                  await cubit.loadData(asset);
+                                  if (!context.mounted) return;
                                   Navigator.of(context).pushNamed(EditStoryScreen.route, arguments: {'cubit': cubit});
                                 },
                                 child: Image.memory(snapshot.data!, fit: BoxFit.cover),
