@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:pro_image_editor/designs/whatsapp/whatsapp.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:pro_video_editor/pro_video_editor.dart';
@@ -107,13 +106,9 @@ class _PageState extends State<Page> {
   @override
   void initState() {
     super.initState();
-    if (context.read<StoryCubit>().state.selectedMedia!.type == AssetType.video) {
+    if (context.read<StoryCubit>().state.mediaType == 'video') {
       _load();
     }
-  }
-
-  Future<void> loadData() async {
-    await context.read<StoryCubit>().loadData();
   }
 
   Future<void> _load() async {
@@ -228,7 +223,8 @@ class _PageState extends State<Page> {
         var cubit = context.read<StoryCubit>();
         return LayoutBuilder(
           builder: (context, constraints) {
-            return cubit.state.selectedMedia!.type == AssetType.image
+            return
+              cubit.state.mediaType == 'image'
                 ? ProImageEditor.file(
                   cubit.state.storyMedia,
                   // key: editorKey,
@@ -438,7 +434,8 @@ class _PageState extends State<Page> {
                     ),
                   ),
                 )
-                : _proVideoController == null
+                :
+              _proVideoController == null
                 ? Center(child: CircularProgressIndicator())
                 : ProImageEditor.video(
                   _proVideoController!,

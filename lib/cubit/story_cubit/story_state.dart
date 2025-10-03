@@ -2,12 +2,12 @@ part of 'story_cubit.dart';
 
 class StoryState {
   final File? storyMedia;
-  final AssetEntity? selectedMedia;
+  final String mediaType;
   final LoadStatus loadStatus;
 
   const StoryState.init({
     this.storyMedia,
-    this.selectedMedia,
+    this.mediaType = '',
     this.loadStatus = LoadStatus.init,
   });
 
@@ -16,7 +16,7 @@ class StoryState {
 
   const StoryState({
     this.storyMedia,
-    this.selectedMedia,
+    required this.mediaType,
     required this.loadStatus,
   });
 
@@ -27,7 +27,7 @@ class StoryState {
           (other is StoryState &&
               runtimeType == other.runtimeType &&
               storyMedia == other.storyMedia &&
-              selectedMedia == other.selectedMedia &&
+              mediaType == other.mediaType &&
               loadStatus == other.loadStatus
           );
 
@@ -35,7 +35,7 @@ class StoryState {
   @override
   int get hashCode =>
       storyMedia.hashCode ^
-      selectedMedia.hashCode ^
+      mediaType.hashCode ^
       loadStatus.hashCode;
 
 
@@ -43,7 +43,7 @@ class StoryState {
   String toString() {
     return 'StoryState{' +
         ' storyMedia: $storyMedia,' +
-        ' selectedMedia: $selectedMedia,' +
+        ' mediaType: $mediaType,' +
         ' loadStatus: $loadStatus,' +
         '}';
   }
@@ -51,12 +51,12 @@ class StoryState {
 
   StoryState copyWith({
     File? storyMedia,
-    AssetEntity? selectedMedia,
+    String? mediaType,
     LoadStatus? loadStatus,
   }) {
     return StoryState(
       storyMedia: storyMedia ?? this.storyMedia,
-      selectedMedia: selectedMedia ?? this.selectedMedia,
+      mediaType: mediaType ?? this.mediaType,
       loadStatus: loadStatus ?? this.loadStatus,
     );
   }
@@ -65,7 +65,7 @@ class StoryState {
   Map<String, dynamic> toMap() {
     return {
       'storyMedia': this.storyMedia,
-      'selectedMedia': this.selectedMedia,
+      'mediaType': this.mediaType,
       'loadStatus': this.loadStatus,
     };
   }
@@ -73,7 +73,7 @@ class StoryState {
   factory StoryState.fromMap(Map<String, dynamic> map) {
     return StoryState(
       storyMedia: map['storyMedia'] as File,
-      selectedMedia: map['selectedMedia'] as AssetEntity,
+      mediaType: map['mediaType'] as String,
       loadStatus: map['loadStatus'] as LoadStatus,
     );
   }

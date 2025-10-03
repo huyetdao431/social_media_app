@@ -31,22 +31,8 @@ class Page extends StatelessWidget {
         actions: [
           Stack(
             children: [
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.notifications_none),
-              ),
-              Positioned(
-                top: 8,
-                right: 12,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
+              IconButton(onPressed: () {}, icon: Icon(Icons.notifications_none)),
+              Positioned(top: 8, right: 12, child: Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle))),
             ],
           ),
         ],
@@ -64,7 +50,6 @@ class Page extends StatelessWidget {
     );
   }
 }
-
 
 class Story extends StatefulWidget {
   const Story({super.key});
@@ -91,25 +76,13 @@ class _StoryState extends State<Story> {
               },
               child: Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundImage: AssetImage('assets/images/avt_01.png'),
-                    backgroundColor: Colors.transparent,
-                  ),
+                  CircleAvatar(radius: 32, backgroundImage: AssetImage('assets/images/avt_01.png'), backgroundColor: Colors.transparent),
                   Positioned(
                     right: 0,
                     bottom: 0,
                     child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        border: Border.all(width: 1.5, color: Colors.black),
-                      ),
-                      child: const Icon(
-                        Icons.add,
-                        size: 20,
-                        color: Colors.black,
-                      ),
+                      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white, border: Border.all(width: 1.5, color: Colors.black)),
+                      child: const Icon(Icons.add, size: 20, color: Colors.black),
                     ),
                   ),
                 ],
@@ -132,26 +105,14 @@ class _StoryState extends State<Story> {
                       SizedBox(
                         width: 68,
                         height: 68,
-                        child: Center(
-                          child: Container(
-                            width: 64,
-                            height: 64,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
+                        child: Center(child: Container(width: 64, height: 64, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black))),
                       ),
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.transparent,
-                            border: Border.all(
-                              width: 3,
-                              color: isWatched[i] ? Colors.grey : Colors.pink,
-                            ),
+                            border: Border.all(width: 3, color: isWatched[i] ? Colors.grey : Colors.pink),
                           ),
                         ),
                       ),
@@ -167,16 +128,7 @@ class _StoryState extends State<Story> {
                   SizedBox(
                     width: 68,
                     height: 68,
-                    child: Center(
-                      child: Container(
-                        height: 64,
-                        width: 64,
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
+                    child: Center(child: Container(height: 64, width: 64, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle))),
                   ),
                   SizedBox(
                     width: 68,
@@ -184,10 +136,7 @@ class _StoryState extends State<Story> {
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.grey,
                           borderRadius: BorderRadius.circular(12),

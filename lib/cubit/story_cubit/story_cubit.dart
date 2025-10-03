@@ -11,18 +11,22 @@ part 'story_state.dart';
 class StoryCubit extends Cubit<StoryState> {
   StoryCubit() : super(StoryState.init());
 
-  Future<void> loadData() async {
+  Future<void> loadData(AssetEntity asset) async {
     emit(state.copyWith(loadStatus: LoadStatus.loading));
     try {
-      final file = await state.selectedMedia!.file;
+      final file = await asset.file;
       emit(state.copyWith(storyMedia: file, loadStatus: LoadStatus.done));
     } catch (e) {
       emit(state.copyWith(loadStatus: LoadStatus.error));
     }
   }
 
-  void setSelectedMedia(AssetEntity asset) {
-    emit(state.copyWith(selectedMedia: asset));
+  void setMediaType(String mediaType) {
+    emit(state.copyWith(mediaType: mediaType));
+  }
+
+  void getStoryMediaFromCamera(File file) {
+    emit(state.copyWith(storyMedia: file));
   }
 
   Future<void> setStoryMedia(Uint8List bytes) async {

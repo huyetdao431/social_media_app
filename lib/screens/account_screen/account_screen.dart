@@ -1,626 +1,318 @@
-// import 'package:flutter/material.dart';
-// import 'package:social_media_app/screens/account_screen/account_setting_screen.dart';
-// import 'package:social_media_app/screens/add_post_screen/add_post_screen.dart';
-// import 'package:social_media_app/screens/post_list_screen/post_list_screen.dart';
-//
-// import '../../materials/app_colors.dart';
-// import '../../materials/app_text_styles.dart';
-//
-// class AccountScreen extends StatefulWidget {
-//   static const String route = 'AccountScreen';
-//
-//   const AccountScreen({super.key});
-//
-//   @override
-//   State<AccountScreen> createState() => _AccountScreenState();
-// }
-//
-// class _AccountScreenState extends State<AccountScreen> with SingleTickerProviderStateMixin  {
-//   final ScrollController _scrollController = ScrollController();
-//   late TabController _tabController;
-//   int itemCount = 12;
-//   bool isLoadMore = false;
-//   int currentTabIndex = 0;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _tabController = TabController(length: 2, vsync: this);
-//     _scrollController.addListener(_onScroll);
-//   }
-//
-//   void _onScroll() {
-//     if (_scrollController.position.pixels >=
-//         _scrollController.position.maxScrollExtent) {
-//       loadMorePost();
-//     }
-//   }
-//
-//   void loadMorePost() {
-//     if (!isLoadMore) {
-//       setState(() => isLoadMore = true);
-//       Future.delayed(Duration(seconds: 1), () {
-//         setState(() {
-//           itemCount += 6;
-//           isLoadMore = false;
-//         });
-//       });
-//     }
-//   }
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('username'),
-//         actions: [
-//           IconButton(
-//             onPressed: () {},
-//             icon: Icon(Icons.add_box_outlined),
-//           ),
-//           IconButton(
-//             onPressed: () {
-//               Navigator.of(context).pushNamed(AccountSettingScreen.route);
-//             },
-//             icon: Icon(Icons.dehaze),
-//           ),
-//         ],
-//       ),
-//       body: NestedScrollView(
-//         controller: _scrollController,
-//         headerSliverBuilder: (context, innerBoxIsScrolled) {
-//           return [
-//             SliverToBoxAdapter(
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   const SizedBox(height: 16),
-//                   Padding(
-//                     padding: EdgeInsets.symmetric(horizontal: 16),
-//                     child: Column(
-//                       crossAxisAlignment: CrossAxisAlignment.start,
-//                       children: [
-//                         _buildProfileInfo(),
-//                         _buildDescription(),
-//                       ],
-//                     ),
-//                   ),
-//                   TabBar(
-//                     controller: _tabController,
-//                     indicatorColor: Colors.black,
-//                     labelColor: Colors.black,
-//                     unselectedLabelColor: Colors.grey,
-//                     tabs: const [
-//                       Tab(icon: Icon(Icons.grid_on)),
-//                       Tab(icon: Icon(Icons.video_collection_outlined)),
-//                     ],
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ];
-//         },
-//         body: TabBarView(
-//           controller: _tabController,
-//           children: [
-//             ListImages(itemCount: itemCount),
-//             ListVideos(itemCount: itemCount),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//
-//
-//   Widget _buildProfileInfo() {
-//     return Row(
-//       children: [
-//         GestureDetector(
-//           onTap: () {},
-//           child: SizedBox(
-//             height: 100,
-//             width: 72,
-//             child: Stack(
-//               children: [
-//                 Positioned(
-//                   bottom: 0,
-//                   child: CircleAvatar(
-//                     radius: 36,
-//                     backgroundColor: Colors.transparent,
-//                     backgroundImage: AssetImage('assets/images/avt_13.png'),
-//                   ),
-//                 ),
-//                 Positioned(
-//                   right: 0,
-//                   bottom: 0,
-//                   child: Container(
-//                     decoration: BoxDecoration(
-//                       shape: BoxShape.circle,
-//                       color: Colors.white,
-//                       border: Border.all(width: 1.5, color: Colors.black),
-//                     ),
-//                     child: const Icon(Icons.add, size: 20, color: Colors.black),
-//                   ),
-//                 ),
-//                 Container(
-//                   padding: EdgeInsets.all(8),
-//                   decoration: BoxDecoration(
-//                     color: AppColors.textMutedDark,
-//                     borderRadius: BorderRadius.circular(16),
-//                   ),
-//                   child: Text(
-//                     'Ban dang nghi gi?',
-//                     style: AppTextStyles.badge(context),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ),
-//         SizedBox(width: 16),
-//         Expanded(
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               Text('name', style: AppTextStyles.subHeadline(context)),
-//               SizedBox(height: 8),
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                 children: [
-//                   _buildStatColumn('20', 'Bài viết'),
-//                   _buildStatColumn('1.2K', 'Người theo dõi'),
-//                   _buildStatColumn('200', 'Đang theo dõi'),
-//                 ],
-//               ),
-//             ],
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-//
-//   Widget _buildStatColumn(String data, String label) {
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         Text(data, style: AppTextStyles.subHeadline(context)),
-//         Text(label, style: AppTextStyles.caption(context)),
-//       ],
-//     );
-//   }
-//
-//   Widget _buildDescription() {
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         SizedBox(height: 16),
-//         Text('description'),
-//         Text('links'),
-//         Row(
-//           children: [
-//             ElevatedButton(onPressed: () {}, child: Text('Edit Profile')),
-//           ],
-//         ),
-//       ],
-//     );
-//   }
-// }
-//
-// class ListVideos extends StatelessWidget {
-//   final int itemCount;
-//   const ListVideos({super.key, required this.itemCount});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return GridView.builder(
-//       shrinkWrap: true,
-//       physics: NeverScrollableScrollPhysics(),
-//       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//         crossAxisCount: 3,
-//         mainAxisSpacing: 2,
-//         crossAxisSpacing: 2,
-//         childAspectRatio: 1,
-//       ),
-//       itemCount: itemCount,
-//       itemBuilder: (context, index) {
-//         return GestureDetector(
-//           onTap: () {
-//             Navigator.of(context).pushNamed(PostListScreen.route, arguments: {'initialIndex' : index});
-//           },
-//           child: Stack(
-//             children: [
-//               Container(
-//                 color:
-//                 index % 2 == 0
-//                     ? Theme.of(context).colorScheme.primary
-//                     : Theme.of(context).colorScheme.error,
-//                 child: Image.asset(
-//                   'assets/images/avt_09.png',
-//                   fit: BoxFit.cover,
-//                 ),
-//               ),
-//               Positioned(
-//                 top: 8,
-//                 right: 8,
-//                 child: Icon(Icons.filter_none, color: AppColors.textLight),
-//               ),
-//             ],
-//           ),
-//         );
-//       },
-//     );
-//   }
-// }
-//
-// class ListImages extends StatelessWidget {
-//   final int itemCount;
-//   const ListImages({super.key, required this.itemCount});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return GridView.builder(
-//       shrinkWrap: true,
-//       physics: NeverScrollableScrollPhysics(),
-//       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//         crossAxisCount: 3,
-//         mainAxisSpacing: 2,
-//         crossAxisSpacing: 2,
-//         childAspectRatio: 1,
-//       ),
-//       itemCount: itemCount,
-//       itemBuilder: (context, index) {
-//         return GestureDetector(
-//           onTap: () {
-//             Navigator.of(context).pushNamed(PostListScreen.route, arguments: {'initialIndex' : index});
-//           },
-//           child: Stack(
-//             children: [
-//               Container(
-//                 color:
-//                 index % 2 == 0
-//                     ? Theme.of(context).colorScheme.primary
-//                     : Theme.of(context).colorScheme.error,
-//                 child: Image.asset(
-//                   'assets/images/avt_06.png',
-//                   fit: BoxFit.cover,
-//                 ),
-//               ),
-//               Positioned(
-//                 top: 8,
-//                 right: 8,
-//                 child: Icon(Icons.filter_none, color: AppColors.textLight),
-//               ),
-//             ],
-//           ),
-//         );
-//       },
-//     );
-//   }
-// }
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:social_media_app/cubit/authentication_cubit/authentication_cubit.dart';
+import 'package:social_media_app/cubit/main_cubit/main_cubit.dart';
+import 'package:social_media_app/cubit/profile_cubit/profile_cubit.dart';
 import 'package:social_media_app/screens/account_screen/account_setting_screen.dart';
-import '../../materials/app_colors.dart';
-import '../../materials/app_text_styles.dart';
-import '../post_list_screen/post_list_screen.dart';
+import 'package:social_media_app/screens/account_screen/edit_profile_screen.dart';
+import 'package:social_media_app/screens/post_list_screen/post_list_screen.dart';
+import 'package:social_media_app/services/repositories/api/api.dart';
 
-class AccountScreen extends StatefulWidget {
+import '../../materials/app_text_styles.dart';
+
+class AccountScreen extends StatelessWidget {
   static const String route = 'AccountScreen';
 
   const AccountScreen({super.key});
 
   @override
-  State<AccountScreen> createState() => _AccountScreenState();
-}
-
-class _AccountScreenState extends State<AccountScreen> {
-  @override
   Widget build(BuildContext context) {
-    return Page();
+    final mainProfile = context.read<MainCubit>().state.profile;
+
+    return BlocProvider(create: (context) => ProfileCubit(context.read<Api>())..loadProfile(mainProfile!), child: const _AccountPage());
   }
 }
 
-class Page extends StatefulWidget {
-  const Page({super.key});
+class _AccountPage extends StatefulWidget {
+  const _AccountPage({Key? key}) : super(key: key);
 
   @override
-  State<Page> createState() => _PageState();
+  State<_AccountPage> createState() => _AccountPageState();
 }
 
-class _PageState extends State<Page> with TickerProviderStateMixin {
-  final ScrollController _scrollController = ScrollController();
-  late TabController _tabController;
+class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixin {
+  late final TabController _tabController;
+  late final ScrollController _outerScrollController;
 
-  int photoCount = 12;
-  int videoCount = 9;
-  bool isLoadMore = false;
+  int _photoCount = 12;
+  int _videoCount = 9;
+  bool _isLoadMore = false;
+
+  static const double _loadMoreThreshold = 200;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _scrollController.addListener(_onScroll);
+    _outerScrollController = ScrollController();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      _loadMore();
-    }
-  }
+  void _tryLoadMore() {
+    if (_isLoadMore) return;
+    setState(() => _isLoadMore = true);
 
-  void _loadMore() {
-    if (!isLoadMore) {
-      setState(() => isLoadMore = true);
-      Future.delayed(const Duration(seconds: 1), () {
-        setState(() {
-          if (_tabController.index == 0) {
-            photoCount += 6;
-          } else {
-            videoCount += 4;
-          }
-          isLoadMore = false;
-        });
+    Future.delayed(const Duration(milliseconds: 700), () {
+      setState(() {
+        if (_tabController.index == 0) {
+          _photoCount += 6;
+        } else {
+          _videoCount += 4;
+        }
+        _isLoadMore = false;
       });
-    }
+    });
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _outerScrollController.dispose();
     _tabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final onSurface = theme.colorScheme.onSurface;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('username'),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
+        title: BlocBuilder<ProfileCubit, ProfileState>(
+          builder: (context, state) {
+            final username = state.userProfile?.username ?? 'username';
+            return Text(username, style: theme.textTheme.headlineLarge);
+          },
+        ),
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.add_box_outlined),
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).pushNamed(AccountSettingScreen.route);
-            },
-            icon: const Icon(Icons.dehaze),
-          ),
+          IconButton(onPressed: () {}, icon: Icon(Icons.add_box_outlined, color: onSurface)),
+          IconButton(onPressed: () => Navigator.of(context).pushNamed(AccountSettingScreen.route), icon: Icon(Icons.dehaze, color: onSurface)),
         ],
       ),
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // Profile info
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Column(
-                children: [_buildProfileInfo(), _buildDescription()],
-              ),
-            ),
-          ),
+      body: BlocBuilder<ProfileCubit, ProfileState>(
+        builder: (context, state) {
+          final profile = state.userProfile;
+          final cubit = context.read<ProfileCubit>();
 
-          // TabBar ghim
-          SliverPersistentHeader(
-            delegate: _SliverTabBarDelegate(
-              TabBar(
-                controller: _tabController,
-                labelColor:
-                    Theme.of(context).brightness == Brightness.light
-                        ? AppColors.surfaceDark
-                        : AppColors.textLight,
-                unselectedLabelColor:
-                    Theme.of(context).brightness == Brightness.light
-                        ? AppColors.textMutedLight
-                        : AppColors.subHeadlineDark,
-                tabs: [
-                  Tab(icon: Icon(Icons.grid_on)),
-                  Tab(icon: Icon(Icons.video_collection_outlined)),
-                ],
-              ),
-            ),
-          ),
-
-          // Nội dung theo tab
-          SliverToBoxAdapter(
-            child: AnimatedBuilder(
-              animation: _tabController,
-              builder: (context, _) {
-                return _tabController.index == 0
-                    ? _buildPhotoGrid()
-                    : _buildVideoGrid();
-              },
-            ),
-          ),
-
-          // Loading indicator
-          SliverToBoxAdapter(
-            child:
-                isLoadMore
-                    ? const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                    : const SizedBox(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfileInfo() {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () {},
-          child: SizedBox(
-            height: 100,
-            width: 72,
-            child: Stack(
-              children: [
-                Positioned(
-                  bottom: 0,
-                  child: CircleAvatar(
-                    radius: 36,
-                    backgroundColor: Colors.transparent,
-                    backgroundImage: AssetImage('assets/images/avt_13.png'),
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(width: 1.5, color: Colors.black),
+          return NestedScrollView(
+            controller: _outerScrollController,
+            headerSliverBuilder:
+                (context, innerScrolled) => [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                      child: _ProfileHeader(
+                        profile: profile,
+                        onEditProfile: () {
+                          Navigator.of(context).pushNamed(EditProfileScreen.route, arguments: {'cubit' : cubit});
+                        },
+                      ),
                     ),
-                    child: const Icon(Icons.add, size: 20, color: Colors.black),
+                  ),
+
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SliverTabBarDelegate(
+                      TabBar(
+                        controller: _tabController,
+                        indicatorColor: primary,
+                        labelColor: primary,
+                        unselectedLabelColor: onSurface.withAlpha(153),
+                        tabs: [Tab(icon: Icon(Icons.grid_on)), Tab(icon: Icon(Icons.video_collection_outlined))],
+                      ),
+                    ),
+                  ),
+                ],
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                // Photos tab
+                NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - _loadMoreThreshold) {
+                      _tryLoadMore();
+                    }
+                    return false;
+                  },
+                  child: _MediaGrid(
+                    itemCount: _photoCount,
+                    onTapItem: (index) => Navigator.of(context).pushNamed(PostListScreen.route, arguments: {'initialIndex': index}),
                   ),
                 ),
-                Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.textMutedDark,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    'Ban dang nghi gi?',
-                    style: AppTextStyles.badge(context),
+
+                // Videos tab
+                NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - _loadMoreThreshold) {
+                      _tryLoadMore();
+                    }
+                    return false;
+                  },
+                  child: _MediaGrid(
+                    itemCount: _videoCount,
+                    onTapItem: (index) => Navigator.of(context).pushNamed(PostListScreen.route, arguments: {'initialIndex': index}),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
-        SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('name', style: AppTextStyles.subHeadline(context)),
-              SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildStatColumn('20', 'Bài viết'),
-                  _buildStatColumn('1.2K', 'Người theo dõi'),
-                  _buildStatColumn('200', 'Đang theo dõi'),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
+          );
+        },
+      ),
+      bottomNavigationBar: _isLoadMore ? SizedBox(height: 52, child: Center(child: CircularProgressIndicator(color: primary))) : null,
     );
   }
+}
 
-  Widget _buildStatColumn(String data, String label) {
+class _ProfileHeader extends StatelessWidget {
+  final dynamic profile;
+  final VoidCallback onEditProfile;
+
+  const _ProfileHeader({required this.profile, required this.onEditProfile, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final surface = theme.colorScheme.surface;
+    final onSurface = theme.colorScheme.onSurface;
+
+    final name = profile?.displayName ?? profile?.username ?? 'Name';
+    final bio = profile?.bio ?? 'No bio yet';
+    final avatarUrl = profile?.avatarUrl as String?;
+    final posts = '0';
+    final followers = '0';
+    final following = '0';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(data, style: AppTextStyles.subHeadline(context)),
-        Text(label, style: AppTextStyles.caption(context)),
-      ],
-    );
-  }
-
-  Widget _buildDescription() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(height: 16),
-        Text('description'),
-        Text('links'),
         Row(
           children: [
-            ElevatedButton(onPressed: () {}, child: Text('Edit Profile')),
+            // Avatar + add icon
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                CircleAvatar(
+                  radius: 36,
+                  backgroundColor: surface,
+                  backgroundImage:
+                      avatarUrl != null && avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : const AssetImage('assets/images/avt_13.png') as ImageProvider,
+                ),
+                Container(
+                  margin: const EdgeInsets.only(right: 2, bottom: 2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: theme.scaffoldBackgroundColor,
+                    border: Border.all(width: 1.2, color: onSurface.withAlpha(31)),
+                  ),
+                  child: Padding(padding: const EdgeInsets.all(4.0), child: Icon(Icons.add, size: 16, color: onSurface.withAlpha(204))),
+                ),
+              ],
+            ),
+
+            const SizedBox(width: 16),
+
+            // Name + stats
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: AppTextStyles.subHeadline(context)),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _StatColumn(data: posts, label: 'Bài viết'),
+                      _StatColumn(data: followers, label: 'Người theo dõi'),
+                      _StatColumn(data: following, label: 'Đang theo dõi'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        // Bio + link row
+        Text(bio, style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 6),
+
+        // Actions
+        Row(
+          children: [
+            ElevatedButton(
+              onPressed: onEditProfile,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                textStyle: theme.textTheme.bodyMedium,
+              ),
+              child: const Text('Edit Profile'),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary,
+                side: BorderSide(color: theme.colorScheme.primary.withAlpha(31)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                textStyle: theme.textTheme.bodyMedium,
+              ),
+              child: const Text('Follow'),
+            ),
           ],
         ),
       ],
     );
   }
+}
 
-  Widget _buildPhotoGrid() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(1),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 2,
-        crossAxisSpacing: 2,
-      ),
-      itemCount: photoCount,
-      itemBuilder: (context, index) {
-        return GestureDetector(
-          onTap: () {
-            Navigator.of(context).pushNamed(
-              PostListScreen.route,
-              arguments: {'initialIndex': index},
-            );
-          },
-          child: Stack(
-            children: [
-              Container(
-                color:
-                    index % 2 == 0
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.error,
-                child: Image.asset(
-                  'assets/images/avt_09.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Icon(Icons.filter_none, color: AppColors.textLight),
-              ),
-            ],
-          ),
-        );
-      },
+class _StatColumn extends StatelessWidget {
+  final String data;
+  final String label;
+
+  const _StatColumn({required this.data, required this.label, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [Text(data, style: AppTextStyles.subHeadline(context)), Text(label, style: AppTextStyles.caption(context))],
     );
   }
+}
 
-  Widget _buildVideoGrid() {
+class _MediaGrid extends StatelessWidget {
+  final int itemCount;
+  final void Function(int index) onTapItem;
+
+  const _MediaGrid({required this.itemCount, required this.onTapItem, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(1),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 2,
-        crossAxisSpacing: 2,
-      ),
-      itemCount: videoCount,
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 1.0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 2, crossAxisSpacing: 2),
+      itemCount: itemCount,
       itemBuilder: (context, index) {
         return GestureDetector(
-          onTap: () {
-            Navigator.of(context).pushNamed(
-              PostListScreen.route,
-              arguments: {'initialIndex': index},
-            );
-          },
+          onTap: () => onTapItem(index),
           child: Stack(
+            fit: StackFit.expand,
             children: [
               Container(
-                color:
-                    index % 2 == 0
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.error,
-                child: Image.asset(
-                  'assets/images/avt_09.png',
-                  fit: BoxFit.cover,
-                ),
+                color: theme.colorScheme.surface,
+                child: Image.asset('assets/images/avt_09.png', fit: BoxFit.cover, width: double.infinity, height: double.infinity),
               ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Icon(Icons.filter_none, color: AppColors.textLight),
-              ),
+              Positioned(top: 8, right: 8, child: Icon(Icons.filter_none, size: 18, color: theme.colorScheme.onSurface.withAlpha(115))),
             ],
           ),
         );
@@ -641,16 +333,17 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => _tabBar.preferredSize.height;
 
   @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(child: _tabBar);
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      alignment: Alignment.centerLeft,
+      child: _tabBar,
+    );
   }
 
   @override
-  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
-    return false;
+  bool shouldRebuild(covariant _SliverTabBarDelegate oldDelegate) {
+    return oldDelegate._tabBar != _tabBar;
   }
 }
