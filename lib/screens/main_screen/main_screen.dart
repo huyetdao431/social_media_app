@@ -19,27 +19,32 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  final List<Widget?> _pages = List.filled(5, null); // ban đầu tất cả null
+  final List<Widget?> _pages = List.filled(5, null);
   final GlobalKey<ReelsScreenState> _reelsKey = GlobalKey<ReelsScreenState>();
+  bool _createMediaOpening = false; // prevent double open
 
   void onItemTapped(int index) {
-    // Nếu đang ở tab Reels và sắp chuyển đi -> pause
+    // Prevent double open for middle button
+    if (index == 2) {
+      Navigator.of(context).pushNamed(CreateMediaScreen.route);
+      return;
+    }
+
+    // Pause reels if leaving reels tab
     if (_selectedIndex == 3 && index != 3) {
       _reelsKey.currentState?.pause();
     }
 
     setState(() {
       _selectedIndex = index;
-      // Lazy load: chỉ khởi tạo khi cần
       _pages[index] ??= _buildPage(index);
     });
 
-    // Nếu vừa chuyển vào Reels -> play
+    // Play if entering reels
     if (index == 3) {
       _reelsKey.currentState?.playCurrent();
     }
   }
-
 
   Widget _buildPage(int index) {
     switch (index) {
@@ -47,9 +52,6 @@ class _MainScreenState extends State<MainScreen> {
         return HomeScreen();
       case 1:
         return SearchScreen();
-      case 2:
-        Navigator.of(context).pushNamed(CreateMediaScreen.route);
-        return const SizedBox();
       case 3:
         return ReelsScreen(key: _reelsKey);
       case 4:
@@ -62,7 +64,6 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // Khởi tạo tab đầu tiên
     context.read<MainCubit>().setUserProfile();
     _pages[0] = _buildPage(0);
   }
@@ -71,10 +72,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages.map((p) => p ?? const SizedBox()).toList(),
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _pages.map((p) => p ?? const SizedBox()).toList()),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: onItemTapped,
@@ -83,18 +81,10 @@ class _MainScreenState extends State<MainScreen> {
         unselectedItemColor: Theme.of(context).textTheme.bodySmall?.color,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
-        items: [
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: ''),
-          BottomNavigationBarItem(
-            icon: IconButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed(CreateMediaScreen.route);
-              },
-              icon: Icon(Icons.add_box_outlined),
-            ),
-            label: '',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.add_box_outlined), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.video_collection), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
         ],

@@ -526,7 +526,6 @@ class _EditPageState extends State<EditPage> {
         canUndo: editor.canUndo,
         openEditor: editor.isSubEditorOpen,
       ),
-      WhatsappFilters(editor: editor, whatsAppHelper: _whatsAppHelper),
     ];
   }
 }

@@ -149,7 +149,6 @@ class _PageState extends State<Page> {
                                   itemCount: cubit.state.assets.length,
                                   onPageChanged: (index) {
                                     cubit.setIndex(index);
-                                    // shouldPlayVideo = cubit.state.assets.indexOf(cubit.state.assets[index]) == cubit.state.selectedIndex;
                                   },
                                   itemBuilder: (context, index) {
                                     var imageWidth = screenWidth * 0.9;
@@ -176,7 +175,6 @@ class _PageState extends State<Page> {
                                                             shouldPlay: index == cubit.state.selectedIndex,
                                                           ),
                                                 ),
-
                                                 if (cubit.state.assets.length > 2)
                                                   Positioned(
                                                     top: 0,
@@ -260,7 +258,6 @@ class _PageState extends State<Page> {
                                 clipBehavior: Clip.hardEdge,
                                 child: Stack(
                                   children: [
-                                    Opacity(opacity: 0.5, child: Image.file(cubit.state.assets[cubit.state.selectedIndex]['file'], fit: BoxFit.cover)),
                                     Center(child: Icon(Icons.add, color: AppColors.textLight)),
                                   ],
                                 ),

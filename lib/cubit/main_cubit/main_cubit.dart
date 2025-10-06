@@ -37,4 +37,8 @@ class MainCubit extends Cubit<MainState> {
     final userProfile = repo.getProfile('profile');
     emit(state.copyWith(profile: userProfile));
   }
+
+  void switchSelectedIndex(int index) {
+    emit(state.copyWith(selectedIndex: index));
+  }
 }

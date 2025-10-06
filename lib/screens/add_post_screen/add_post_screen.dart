@@ -19,7 +19,10 @@ class AddPostScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => PostCubit(),
-      child: Theme(data: ThemeData.dark(), child: Page()),
+      child: Theme(
+        data: ThemeData.dark(),
+        child: const Page(),
+      ),
     );
   }
 }
@@ -34,9 +37,11 @@ class Page extends StatefulWidget {
 class _PageState extends State<Page> {
   final List<AssetEntity> _mediaList = [];
   List<Map<AssetPathEntity, int>> _albums = [];
+  AssetEntity? currentAsset;
   AssetPathEntity? _currentAlbum;
   String _albumName = "Mới đây";
   bool isMultiplyChoice = false;
+  bool _pausePreview = false;
 
   bool _loading = true;
   bool _isLoadingMore = false;
@@ -44,7 +49,6 @@ class _PageState extends State<Page> {
   final int _pageSize = 40;
   final ScrollController _scrollController = ScrollController();
 
-  // Thumb cache: simple LRU with max size
   final Map<String, Uint8List> _thumbCache = {};
   final List<String> _thumbCacheKeys = [];
   final int _thumbCacheMaxEntries = 150;
@@ -61,24 +65,30 @@ class _PageState extends State<Page> {
   Future<void> _initPermission() async {
     final permitted = await PhotoManager.requestPermissionExtend();
     if (!permitted.isAuth) {
-      // Người dùng từ chối: open setting rồi hiển thị UI thay thế (không để loading mãi)
       PhotoManager.openSetting();
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
       return;
     }
+
     await _loadAlbums();
     await _loadInitialMedia();
+
     if (mounted) {
-      setState(() => _loading = false);
+      setState(() {
+        _loading = false;
+        if (_mediaList.isNotEmpty) {
+          currentAsset = _mediaList.first;
+          context.read<PostCubit>().addToSelectedAssets(currentAsset!);
+        }
+      });
     }
   }
 
   Future<void> _loadAlbums() async {
-    final albums = await PhotoManager.getAssetPathList(type: RequestType.common, onlyAll: false);
+    final albums = await PhotoManager.getAssetPathList(
+      type: RequestType.common,
+      onlyAll: false,
+    );
     final List<Map<AssetPathEntity, int>> result = [];
     for (var album in albums) {
       final count = await album.assetCountAsync;
@@ -91,7 +101,7 @@ class _PageState extends State<Page> {
   Future<void> _loadInitialMedia() async {
     _page = 0;
     _mediaList.clear();
-    _clearThumbCache(); // clear when we change album/init
+    _clearThumbCache();
     await _loadMore();
   }
 
@@ -105,19 +115,10 @@ class _PageState extends State<Page> {
           _mediaList.addAll(newMedia);
           _page++;
         });
-      } else {
-        // still increment page to avoid duplicate loads if unmounted? keep it safe
-        _page++;
       }
-    } catch (e, st) {
-      // Log error nếu cần; đảm bảo UI không bị kẹt
-      // print('LoadMore error: $e\n$st');
+    } catch (_) {
     } finally {
-      if (mounted) {
-        setState(() => _isLoadingMore = false);
-      } else {
-        _isLoadingMore = false;
-      }
+      if (mounted) setState(() => _isLoadingMore = false);
     }
   }
 
@@ -130,14 +131,12 @@ class _PageState extends State<Page> {
   Future<Uint8List?> _getThumb(AssetEntity asset, {int width = 200, int height = 200}) async {
     final id = asset.id;
     if (_thumbCache.containsKey(id)) {
-      // update LRU order
       _thumbCacheKeys.remove(id);
       _thumbCacheKeys.add(id);
       return _thumbCache[id];
     }
     final data = await asset.thumbnailDataWithSize(ThumbnailSize(width, height));
     if (data != null) {
-      // insert into LRU cache
       _thumbCache[id] = data;
       _thumbCacheKeys.add(id);
       if (_thumbCacheKeys.length > _thumbCacheMaxEntries) {
@@ -153,7 +152,6 @@ class _PageState extends State<Page> {
     _thumbCacheKeys.clear();
   }
 
-  // Refactor: delegate selection logic to cubit
   void _toggleSelect(AssetEntity asset) {
     final cubit = context.read<PostCubit>();
     if (isMultiplyChoice) {
@@ -161,27 +159,34 @@ class _PageState extends State<Page> {
     } else {
       cubit.selectSingle(asset);
     }
+    setState(() {
+      currentAsset = asset;
+    });
   }
 
-  int _selectedIndex(int index) {
-    return index == -1 ? 0 : index + 1;
-  }
+  int _selectedIndex(int index) => index == -1 ? 0 : index + 1;
 
   void _chooseAlbum(AssetPathEntity album) async {
     _currentAlbum = album;
     _albumName = album.name.isNotEmpty ? album.name : "Không tên";
     _clearThumbCache();
     await _loadInitialMedia();
-    if (mounted) Navigator.pop(context);
+
+    if (mounted) {
+      setState(() {
+        if (_mediaList.isNotEmpty) {
+          currentAsset = _mediaList.first;
+        } else {
+          currentAsset = null;
+        }
+      });
+      Navigator.pop(context);
+    }
   }
 
   Future<File?> getFile() async {
-    final cubit = context.read<PostCubit>();
-    final sel = cubit.state.selectedAssets;
-    final idx = cubit.state.selectedIndex;
-    if (sel.isEmpty || idx < 0 || idx >= sel.length) return null;
-    final asset = sel[idx];
-    return await asset.file;
+    if (currentAsset == null) return null;
+    return await currentAsset!.file;
   }
 
   @override
@@ -198,8 +203,7 @@ class _PageState extends State<Page> {
 
     return BlocBuilder<PostCubit, PostState>(
       builder: (context, state) {
-        final cubit = context.read<PostCubit>();
-        // itemCount: 1 for camera + media items + optional loading footer
+        var cubit = context.read<PostCubit>();
         final totalItemCount = 1 + _mediaList.length + (_isLoadingMore ? 1 : 0);
 
         return Scaffold(
@@ -211,24 +215,34 @@ class _PageState extends State<Page> {
                   if (cubit.state.selectedAssets.isNotEmpty) {
                     await cubit.loadData();
                     if (context.mounted) {
-                      Navigator.of(context).pushNamed(EditMediaScreen.route, arguments: {'cubit': cubit});
+                      cubit.setIndex(0);
+                      setState(() => _pausePreview = true);
+                      Navigator.of(context)
+                          .pushNamed(EditMediaScreen.route, arguments: {'cubit': cubit})
+                          .then((_) {
+                        if (!mounted) return;
+                        setState(() => _pausePreview = false);
+                      });
                     }
                   }
                 },
-                child: Text("Xong (${cubit.state.selectedAssets.length})", style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  "Xong (${cubit.state.selectedAssets.length})",
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
           body: Column(
             children: [
-              // Preview trên
+              // Preview
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.35,
-                child: state.selectedAssets.isEmpty
+                child: currentAsset == null
                     ? const Center(child: Icon(Icons.image_outlined, size: 80))
-                    : state.selectedAssets[state.selectedIndex].type == AssetType.image
+                    : currentAsset!.type == AssetType.image
                     ? FutureBuilder<Uint8List?>(
-                  future: _getThumb(state.selectedAssets[state.selectedIndex], width: 1000, height: 1000),
+                  future: _getThumb(currentAsset!, width: 1000, height: 1000),
                   builder: (_, snapshot) {
                     if (!snapshot.hasData) {
                       return Container(color: Colors.black12);
@@ -236,7 +250,7 @@ class _PageState extends State<Page> {
                     return Image.memory(snapshot.data!, fit: BoxFit.contain);
                   },
                 )
-                    : FutureBuilder<File?>( // video preview
+                    : FutureBuilder<File?>(
                   future: getFile(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -246,31 +260,33 @@ class _PageState extends State<Page> {
                       return const Center(child: Icon(Icons.broken_image));
                     }
                     final videoFile = snapshot.data!;
-                    // Play only if the selected asset is a video (simple logic)
-                    final shouldPlay = state.selectedAssets[state.selectedIndex].type == AssetType.video;
                     return Video(
-                      key: ValueKey(state.selectedAssets[state.selectedIndex].id),
+                      key: ValueKey(currentAsset!.id),
                       video: videoFile,
-                      shouldPlay: shouldPlay,
+                      shouldPlay: currentAsset!.type == AssetType.video && !_pausePreview,
                     );
                   },
                 ),
               ),
 
-              // Gallery dưới
+              // Gallery
               Expanded(
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        TextButton.icon(onPressed: _showAlbumPicker, icon: const Icon(Icons.keyboard_arrow_down), label: Text(_albumName)),
+                        TextButton.icon(
+                          onPressed: _showAlbumPicker,
+                          icon: const Icon(Icons.keyboard_arrow_down),
+                          label: Text(_albumName),
+                        ),
                         GestureDetector(
                           onTap: () {
                             setState(() {
                               isMultiplyChoice = !isMultiplyChoice;
                               if (cubit.state.selectedAssets.isNotEmpty) {
-                                cubit.clearSelected(); // move clear to cubit
+                                cubit.clearSelected();
                               }
                             });
                           },
@@ -286,7 +302,9 @@ class _PageState extends State<Page> {
                             child: Icon(
                               Icons.filter_none,
                               size: 16,
-                              color: isMultiplyChoice ? AppColors.textLight : Theme.of(context).colorScheme.onSurface.withAlpha(224),
+                              color: isMultiplyChoice
+                                  ? AppColors.textLight
+                                  : Theme.of(context).colorScheme.onSurface.withAlpha(224),
                             ),
                           ),
                         ),
@@ -295,10 +313,13 @@ class _PageState extends State<Page> {
                     Expanded(
                       child: GridView.builder(
                         controller: _scrollController,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, crossAxisSpacing: 2, mainAxisSpacing: 2),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 2,
+                          mainAxisSpacing: 2,
+                        ),
                         itemCount: totalItemCount,
                         itemBuilder: (_, index) {
-                          // footer loader is after camera (index 0) + all media
                           final loaderIndex = 1 + _mediaList.length;
                           if (_isLoadingMore && index == loaderIndex) {
                             return const Center(child: CircularProgressIndicator());
@@ -309,15 +330,23 @@ class _PageState extends State<Page> {
                             return GestureDetector(
                               onTap: () async {
                                 if (!isMultiplyChoice) {
-                                  final result = await Navigator.of(context).pushNamed(CameraScreen.route) as Map<String, dynamic>?;
+                                  final result = await Navigator.of(context)
+                                      .pushNamed(CameraScreen.route) as Map<String, dynamic>?;
                                   if (!mounted) return;
                                   if (result != null && result.containsKey('file')) {
                                     final file = result['file'] as File?;
                                     final mediaType = result['mediaType'] as String?;
                                     if (file != null && mediaType != null) {
+                                      if (!context.mounted) return;
                                       context.read<PostCubit>().addToAsset({'file': file, 'type': mediaType});
-                                      if (!mounted) return;
-                                      Navigator.of(context).pushNamed(EditMediaScreen.route, arguments: {'cubit': cubit});
+                                      if (!context.mounted) return;
+                                      setState(() => _pausePreview = true);
+                                      Navigator.of(context)
+                                          .pushNamed(EditMediaScreen.route, arguments: {'cubit': cubit})
+                                          .then((_) {
+                                        if (!mounted) return;
+                                        setState(() => _pausePreview = false);
+                                      });
                                     }
                                   }
                                 }
@@ -327,7 +356,11 @@ class _PageState extends State<Page> {
                                   Center(
                                     child: Container(
                                       color: Theme.of(context).colorScheme.surface.withAlpha(224),
-                                      child: Icon(Icons.camera_alt, size: 56, color: Theme.of(context).colorScheme.onSurface.withAlpha(224)),
+                                      child: Icon(
+                                        Icons.camera_alt,
+                                        size: 56,
+                                        color: Theme.of(context).colorScheme.onSurface.withAlpha(224),
+                                      ),
                                     ),
                                   ),
                                   if (isMultiplyChoice) Container(color: Colors.black.withAlpha(70)),
@@ -345,7 +378,6 @@ class _PageState extends State<Page> {
                           return Stack(
                             fit: StackFit.expand,
                             children: [
-                              // Tap area
                               GestureDetector(
                                 onTap: () => _toggleSelect(asset),
                                 child: FutureBuilder<Uint8List?>(
@@ -358,66 +390,24 @@ class _PageState extends State<Page> {
                                   },
                                 ),
                               ),
-
-                              // Video duration badge
                               if (asset.type == AssetType.video)
                                 Positioned(
                                   bottom: 2,
                                   right: 4,
-                                  child: Row(
-                                    children: [
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "${(asset.duration ~/ 60).toString().padLeft(2, '0')}:${(asset.duration % 60).toString().padLeft(2, '0')}",
-                                        style: const TextStyle(color: Colors.white, fontSize: 11),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    "${(asset.duration ~/ 60).toString().padLeft(2, '0')}:${(asset.duration % 60).toString().padLeft(2, '0')}",
+                                    style: const TextStyle(color: Colors.white, fontSize: 11),
                                   ),
                                 ),
-
-                              // Selection overlay & index
                               if (isMultiplyChoice)
-                                Stack(
-                                  children: [
-                                    if (_selectedIndex(cubit.state.selectedAssets.indexOf(asset)) > 0)
-                                      GestureDetector(
-                                        onTap: () => _toggleSelect(asset),
-                                        child: Container(color: AppColors.textMutedDark.withAlpha(92)),
-                                      ),
-                                    Positioned(
-                                      top: 4,
-                                      right: 4,
-                                      child: GestureDetector(
-                                        onTap:() => cubit.toggleMultiSelect2(asset),
-                                        child: _selectedIndex(cubit.state.selectedAssets.indexOf(asset)) > 0
-                                            ? Container(
-                                          width: 26,
-                                          height: 26,
-                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
-                                          child: Center(
-                                            child: Text("${_selectedIndex(cubit.state.selectedAssets.indexOf(asset))}", style: const TextStyle(color: Colors.white, fontSize: 12)),
-                                          ),
-                                        )
-                                            : Container(
-                                          width: 24,
-                                          height: 24,
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey.withAlpha(64),
-                                            shape: BoxShape.circle,
-                                            border: Border.all(color: AppColors.textLight, width: 1),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              else
-                              // single-select overlay
-                                if (_selectedIndex(cubit.state.selectedAssets.indexOf(asset)) > 0)
-                                  GestureDetector(
-                                    onTap: () => _toggleSelect(asset),
-                                    child: Container(color: AppColors.textMutedDark.withAlpha(92)),
-                                  ),
+                                _buildMultiSelectOverlay(cubit, asset)
+                              else if (_selectedIndex(cubit.state.selectedAssets.indexOf(asset)) > 0)
+                                GestureDetector(
+                                  onTap: () {
+                                    _toggleSelect(asset);
+                                  },
+                                  child: Container(color: AppColors.textMutedDark.withAlpha(92)),
+                                ),
                             ],
                           );
                         },
@@ -430,6 +420,55 @@ class _PageState extends State<Page> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildMultiSelectOverlay(PostCubit cubit, AssetEntity asset) {
+    final selectedIndex = _selectedIndex(cubit.state.selectedAssets.indexOf(asset));
+    return Stack(
+      children: [
+        if (selectedIndex > 0)
+          GestureDetector(
+            onTap: () => _toggleSelect(asset),
+            child: Container(color: AppColors.textMutedDark.withAlpha(92)),
+          ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: GestureDetector(
+            onTap: () {
+              cubit.toggleMultiSelect(asset);
+              setState(() {
+                currentAsset = asset;
+              });
+            },
+            child: selectedIndex > 0
+                ? Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  "$selectedIndex",
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ),
+            )
+                : Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Colors.grey.withAlpha(64),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.textLight, width: 1),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -451,59 +490,33 @@ class _PageState extends State<Page> {
                   const SizedBox(height: 8),
                   Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2))),
                   const SizedBox(height: 16),
-
-                  // 3 nút chọn chế độ lọc
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildFilterButton(
-                        icon: Icons.collections,
-                        label: "Gần đây",
-                        onTap: () async {
-                          _albumName = "Gần đây";
-                          final list = await PhotoManager.getAssetPathList(type: RequestType.common, onlyAll: true);
-                          if (list.isNotEmpty) {
-                            _currentAlbum = list.first;
-                            _clearThumbCache();
-                            await _loadInitialMedia();
-                          }
-                          if (context.mounted) Navigator.pop(context);
-                        },
-                      ),
-                      _buildFilterButton(
-                        icon: Icons.image,
-                        label: "Ảnh",
-                        onTap: () async {
-                          _albumName = "Ảnh";
-                          final list = await PhotoManager.getAssetPathList(type: RequestType.image, onlyAll: true);
-                          if (list.isNotEmpty) {
-                            _currentAlbum = list.first;
-                            _clearThumbCache();
-                            await _loadInitialMedia();
-                          }
-                          if (context.mounted) Navigator.pop(context);
-                        },
-                      ),
-                      _buildFilterButton(
-                        icon: Icons.video_collection,
-                        label: "Video",
-                        onTap: () async {
-                          _albumName = "Video";
-                          final list = await PhotoManager.getAssetPathList(type: RequestType.video, onlyAll: true);
-                          if (list.isNotEmpty) {
-                            _currentAlbum = list.first;
-                            _clearThumbCache();
-                            await _loadInitialMedia();
-                          }
-                          if (context.mounted) Navigator.pop(context);
-                        },
-                      ),
+                      _buildFilterButton(icon: Icons.collections, label: "Gần đây", onTap: () async {
+                        _albumName = "Gần đây";
+                        final list = await PhotoManager.getAssetPathList(type: RequestType.common, onlyAll: true);
+                        if (list.isNotEmpty) {
+                          _chooseAlbum(list.first);
+                        }
+                      }),
+                      _buildFilterButton(icon: Icons.image, label: "Ảnh", onTap: () async {
+                        _albumName = "Ảnh";
+                        final list = await PhotoManager.getAssetPathList(type: RequestType.image, onlyAll: true);
+                        if (list.isNotEmpty) {
+                          _chooseAlbum(list.first);
+                        }
+                      }),
+                      _buildFilterButton(icon: Icons.video_collection, label: "Video", onTap: () async {
+                        _albumName = "Video";
+                        final list = await PhotoManager.getAssetPathList(type: RequestType.video, onlyAll: true);
+                        if (list.isNotEmpty) {
+                          _chooseAlbum(list.first);
+                        }
+                      }),
                     ],
                   ),
-
                   const SizedBox(height: 16),
-
-                  // GridView danh sách album
                   Expanded(
                     child: GridView.builder(
                       controller: scrollController,
@@ -519,25 +532,23 @@ class _PageState extends State<Page> {
                         final album = _albums[index];
                         final albumEntity = album.keys.first;
                         final count = album.values.first;
-                        final albumNameSafe = albumEntity.name.isNotEmpty ? albumEntity.name : "Không tên";
+                        final name = albumEntity.name.isNotEmpty ? albumEntity.name : "Không tên";
 
                         return FutureBuilder<List<AssetEntity>>(
                           future: albumEntity.getAssetListRange(start: 0, end: 1),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return _buildAlbumPlaceholder(albumNameSafe, count);
+                              return _buildAlbumPlaceholder(name, count);
                             }
                             final firstAsset = snapshot.data!.first;
                             return FutureBuilder<Uint8List?>(
                               future: firstAsset.thumbnailDataWithSize(const ThumbnailSize(300, 300)),
                               builder: (context, thumbSnap) {
                                 if (!thumbSnap.hasData) {
-                                  return _buildAlbumPlaceholder(albumNameSafe, count);
+                                  return _buildAlbumPlaceholder(name, count);
                                 }
                                 return GestureDetector(
-                                  onTap: () async {
-                                    _chooseAlbum(albumEntity);
-                                  },
+                                  onTap: () => _chooseAlbum(albumEntity),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
@@ -548,7 +559,7 @@ class _PageState extends State<Page> {
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      Text(albumNameSafe, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                      Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
                                       Text("$count mục", style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                     ],
                                   ),
@@ -588,7 +599,7 @@ class _PageState extends State<Page> {
       children: [
         Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(8), child: Container(color: Colors.grey[300]))),
         const SizedBox(height: 4),
-        Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
+        Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
         Text("$count mục", style: const TextStyle(fontSize: 12, color: Colors.grey)),
       ],
     );

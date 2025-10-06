@@ -17,7 +17,7 @@ class AddStoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => StoryCubit(), child: Theme(data: ThemeData.dark(), child: Page()));
+    return BlocProvider(create: (context) => StoryCubit(), child: Theme(data: ThemeData.dark(), child: const Page()));
   }
 }
 

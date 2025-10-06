@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
 import 'package:social_media_app/commons/enums/load_status.dart';
 import 'package:social_media_app/models/profile/profiles.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
@@ -21,10 +20,10 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<String?> uploadAvatar(File file) async {
     emit(state.copyWith(loadStatus: LoadStatus.loading));
     try {
-      final avtUrl = await api.uploadAvatar(file, state.userProfile!.id);
+      final avtUrl = await api.uploadFile(bucketName: 'avatars', file: file, userId: state.userProfile!.id);
       emit(state.copyWith(loadStatus: LoadStatus.done));
       return avtUrl;
-    } catch(e) {
+    } catch (e) {
       emit(state.copyWith(loadStatus: LoadStatus.error, errorMessage: e.toString()));
     }
     return null;
@@ -47,7 +46,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     try {
       result = await api.isExistUsername(username);
       return !result;
-    } catch(e) {
+    } catch (e) {
       throw Exception(e);
     }
   }

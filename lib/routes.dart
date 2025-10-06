@@ -51,7 +51,8 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case SearchScreen.route:
       return MaterialPageRoute(builder: (context) => SearchScreen());
     case CreateMediaScreen.route:
-      return _pushCurrentPageRight(CreateMediaScreen());
+      // return _pushCurrentPageRight(CreateMediaScreen());
+      return MaterialPageRoute(builder: (context) => CreateMediaScreen());
     case AddPostScreen.route:
       return _pushCurrentPageRight(AddPostScreen());
     case AddStoryScreen.route:

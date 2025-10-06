@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_media_app/commons/enums/load_status.dart';
@@ -94,7 +95,6 @@ class PostCubit extends Cubit<PostState> {
       emit(state.copyWith(selectedAssets: list, selectedIndex: list.length - 1));
     }
   }
-
 
   /// Single-select behaviour: nếu đã có -> setIndex, nếu chưa -> thay thế selection bằng asset
   void selectSingle(AssetEntity asset) {
@@ -332,9 +332,10 @@ class PostCubit extends Cubit<PostState> {
         }
       }
       // reset editedAssetIndex sau khi xoá
-      emit(state.copyWith(editedAssetIndex: <int>[]));
+      emit(state.copyWith(editedAssetIndex: []));
     } catch (e) {
       // không emit throw để không crash cubit - caller có thể muốn xử lý
     }
   }
+
 }

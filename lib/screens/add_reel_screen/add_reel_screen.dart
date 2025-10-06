@@ -214,7 +214,7 @@ class _GalleryWidgetState extends State<GalleryWidget> {
                               //TODO: go to edit reel screen
                               final file = await asset.file;
                               final duration = await getVideoDuration(file!.path);
-                              if(duration > 60) {
+                              if (duration > 60) {
                                 await showNotificationDialog(context, message: 'Video must not longer than 60 seconds');
                                 final result = await Navigator.of(context).pushNamed(VideoTrimScreen.route, arguments: {'file': file}) as File;
                                 cubit.saveFileMedia(result);

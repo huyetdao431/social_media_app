@@ -2,12 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:path/path.dart' as p;
+import 'package:mime/mime.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
 import 'package:social_media_app/services/repositories/log/log.dart';
+import 'package:social_media_app/utils/get_video_duration.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 import '../../../models/profile/profiles.dart';
 import '../../../utils/map_login_errors.dart';
+import '../../../utils/utils.dart';
 
 class ApiImpl implements Api {
   Log log;
@@ -251,30 +256,6 @@ class ApiImpl implements Api {
   }
 
   @override
-  Future<String?> uploadAvatar(File file, String userId) async {
-    try {
-      final fileExt = file.path.split('.').last;
-      final fileName = 'avatar-${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-      final filePath = '$userId/$fileName';
-
-      final storage = Supabase.instance.client.storage.from('avatars');
-
-      await storage.upload(
-        filePath,
-        file,
-        fileOptions: const FileOptions(upsert: true),
-      );
-
-      final publicUrl = storage.getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (e) {
-      throw Exception('Upload avatar error: $e');
-    }
-  }
-
-
-  @override
   Future<Profile> updateProfile(Profile newProfile) async {
     final oldProfile = await getProfile(newProfile.id);
     if (oldProfile == null) throw Exception('Profile not found');
@@ -313,6 +294,90 @@ class ApiImpl implements Api {
     if (res == null) {
       throw 'Failed to delete profile';
     }
+  }
+
+  //</editor-fold>
+  //<editor-fold desc="upload media">
+  @override
+  Future<String> uploadFile({required String bucketName, required File file, required String userId, String? folder}) async {
+    try {
+      final fileExt = p.extension(file.path);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = 'file-$timestamp$fileExt';
+
+      final filePath = folder != null && folder.isNotEmpty ? '$folder/$userId/$fileName' : '$userId/$fileName';
+
+      // Upload lên bucket
+      final storage = supabase.storage.from(bucketName);
+      await storage.upload(filePath, file, fileOptions: const FileOptions(upsert: true));
+
+      // Lấy public URL
+      final publicUrl = storage.getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (e) {
+      throw Exception('Lỗi upload file lên bucket $bucketName: $e');
+    }
+  }
+
+  @override
+  Future<String?> generateVideoThumb(String bucketName, File videoFile, String userId) async {
+    final thumbPath = await VideoThumbnail.thumbnailFile(
+      video: videoFile.path,
+      imageFormat: ImageFormat.PNG,
+      maxWidth: 512, // giảm kích thước
+      quality: 75,
+    );
+
+    if (thumbPath == null) return null;
+
+    // upload thumbnail file lên Supabase Storage
+    final thumbFile = File(thumbPath);
+    final thumbUrl = await uploadFile(bucketName: bucketName, file: thumbFile, userId: userId, folder: 'thumbnails');
+    return thumbUrl;
+  }
+
+  @override
+  Future<void> createPostWithFiles({required String userId, required String caption, required List<File> files}) async {
+    if (files.isEmpty) return;
+
+    final List<Map<String, dynamic>> medias = [];
+
+    for (int i = 0; i < files.length; i++) {
+      final file = files[i];
+      final publicUrl = await uploadFile(bucketName: 'posts', file: file, userId: userId, folder: 'posts');
+
+      final mimeType = lookupMimeType(file.path);
+      final isVideo = mimeType != null && mimeType.startsWith('video');
+      final duration = isVideo ? await getVideoDuration(file.path) : null;
+      String? thumbUrl;
+
+      if (isVideo) {
+        thumbUrl = await generateVideoThumb('posts', file, userId);
+      } else {
+        thumbUrl = null;
+      }
+
+      medias.add({
+        'media_url': publicUrl,
+        'media_type': isVideo ? 'video' : 'image',
+        'order_index': i,
+        'is_primary': i == 0,
+        'mime_type': mimeType,
+        'file_size': await file.length(),
+        'duration': duration,
+        'thumb_url': thumbUrl,
+      });
+    }
+
+    final rpcRes = await supabase.rpc('create_post_with_media', params: {'p_user_id': userId, 'p_caption': caption, 'p_medias': medias});
+
+    if (rpcRes.error != null) {
+      throw Exception('Create post failed: ${rpcRes.error!.message}');
+    }
+
+    final createdPostId = rpcRes.data;
+    print('Post created successfully with ID: $createdPostId');
   }
 
   //</editor-fold>

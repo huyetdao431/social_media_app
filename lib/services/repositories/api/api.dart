@@ -26,9 +26,13 @@ abstract class Api {
 
   Future<Profile?> getProfile(String id);
 
-  Future<String?> uploadAvatar(File file, String userId);
+  Future<String> uploadFile({required String bucketName, required File file, required String userId, String? folder});
 
   Future<Profile> updateProfile(Profile newProfile);
 
   Future<void> deleteProfile(String id);
+
+  Future<String?> generateVideoThumb(String bucketName, File videoFile, String userId);
+
+  Future<void> createPostWithFiles({required String userId, required String caption, required List<File> files});
 }
