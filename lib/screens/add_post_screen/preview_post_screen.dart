@@ -3,16 +3,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_media_app/commons/enums/load_status.dart';
+import 'package:social_media_app/cubit/main_cubit/main_cubit.dart';
 import 'package:social_media_app/cubit/post_cubit/post_cubit.dart';
 import 'package:social_media_app/materials/app_colors.dart';
+import 'package:social_media_app/screens/main_screen/main_screen.dart';
+import 'package:social_media_app/utils/dialogs.dart';
+import 'package:social_media_app/utils/overlay.dart';
 
 import '../../commons/widgets/display_video.dart';
 
-/// Refactored Instagram-like preview screen
-/// - preview occupies top 1/2 of the screen
-/// - within that area, media frame is sized according to PostState.aspectRatio
-///   (falls back to 1.0 if null). The media is centered inside the top half.
-/// - media displayed via PageView with PageController(viewportFraction: 0.7)
 class PreviewPostScreen extends StatelessWidget {
   static const String route = 'PreviewPostScreen';
 
@@ -23,7 +23,7 @@ class PreviewPostScreen extends StatelessWidget {
 }
 
 class _PreviewPostPage extends StatefulWidget {
-  const _PreviewPostPage({super.key});
+  const _PreviewPostPage();
 
   @override
   State<_PreviewPostPage> createState() => _PreviewPostPageState();
@@ -43,95 +43,109 @@ class _PreviewPostPageState extends State<_PreviewPostPage> {
 
   void _onShare(BuildContext context) {
     final cubit = context.read<PostCubit>();
-    // cubit.createPost(caption: _captionController.text.trim());
-    Navigator.of(context).pop();
+    cubit.createPost(context.read<MainCubit>().state.profile!.id, _captionController.text.trim()??'');
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PostCubit, PostState>(builder: (context, state) {
-      final cubit = context.read<PostCubit>();
-      final assets = cubit.state.assets; // assumed: List<Map> with 'file'
-      final selectedAssets = cubit.state.selectedAssets; // List<AssetEntity>
+    return BlocConsumer<PostCubit, PostState>(
+  listener: (context, state) async {
+    if(state.loadStatus == LoadStatus.loading) {
+      LoadingOverlay.show(context);
+    }
+    if(state.loadStatus != LoadStatus.loading) {
+      LoadingOverlay.hide();
+    }
+    if(state.loadStatus == LoadStatus.done) {
+      final result = await showNotificationDialog(context, message: 'Create post successfully!');
+      if(result! && context.mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(MainScreen.route, (Route<dynamic> route) => false,);
+      }
+    }
+    if(state.loadStatus == LoadStatus.error) {
+      showErrorDialog(context, state.errorMessage);
+    }
+  },
+  builder: (context, state) {
+    final cubit = context.read<PostCubit>();
+    final assets = cubit.state.assets;
+    final selectedAssets = cubit.state.selectedAssets;
 
-      final screen = MediaQuery.of(context).size;
+    final screen = MediaQuery.of(context).size;
+    final double hei = screen.width * 0.7 / cubit.state.aspectRatio;
+    final double aspectRatio = (cubit.state.aspectRatio) > 0 ? (cubit.state.aspectRatio) : 1.0;
 
-      // Top half height
-      final double hei = screen.width * 0.7 / cubit.state.aspectRatio;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Bài viết mới'),
+        backgroundColor: Colors.transparent,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // TOP: preview area occupies half screen
+            SizedBox(
+              height: hei,
+              width: double.infinity,
+              child: _MediaCarousel(
+                pageController: _pageController,
+                assets: assets,
+                selectedAssets: selectedAssets,
+                onPageChanged: (idx) => setState(() => _selectedIndex = idx),
+                selectedIndex: _selectedIndex,
+                aspectRatio: aspectRatio,
+                maxAreaHeight: hei,
+              ),
+            ),
 
-      // aspectRatio from state (width / height). fallback 1.0
-      final double aspectRatio = (cubit.state.aspectRatio ?? 1.0) > 0 ? (cubit.state.aspectRatio ?? 1.0) : 1.0;
+            // caption
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
+              child: TextField(
+                controller: _captionController,
+                maxLines: null,
+                decoration: const InputDecoration(
+                  hintText: 'Viết chú thích...',
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
 
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Bài viết mới'),
-          backgroundColor: Colors.transparent,
+            // action labels
+            Expanded(
+              child: ListView(
+                children: [
+                  _ActionRow(icon: Icons.person_add, label: 'Gắn thẻ người', onTap: () {}),
+                  _ActionRow(icon: Icons.location_on_outlined, label: 'Thêm địa điểm', onTap: () {}),
+                  _ActionRow(icon: Icons.more_horiz, label: 'Tùy chọn khác', onTap: () {}),
+                  const SizedBox(height: 80),
+                ],
+              ),
+            ),
+          ],
         ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // TOP: preview area occupies half screen
-              SizedBox(
-                height: hei,
-                width: double.infinity,
-                child: _MediaCarousel(
-                  pageController: _pageController,
-                  assets: assets,
-                  selectedAssets: selectedAssets,
-                  onPageChanged: (idx) => setState(() => _selectedIndex = idx),
-                  selectedIndex: _selectedIndex,
-                  aspectRatio: aspectRatio,
-                  maxAreaHeight: hei,
+      ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _onShare(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
+                child: const Text('Chia sẻ', style: TextStyle(fontWeight: FontWeight.w800)),
               ),
-
-              // caption
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
-                child: TextField(
-                  controller: _captionController,
-                  maxLines: null,
-                  decoration: const InputDecoration(
-                    hintText: 'Viết chú thích...',
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-
-              // action labels
-              Expanded(
-                child: ListView(
-                  children: [
-                    _ActionRow(icon: Icons.person_add, label: 'Gắn thẻ người', onTap: () {}),
-                    _ActionRow(icon: Icons.location_on_outlined, label: 'Thêm địa điểm', onTap: () {}),
-                    _ActionRow(icon: Icons.more_horiz, label: 'Tùy chọn khác', onTap: () {}),
-                    const SizedBox(height: 80),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-        bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _onShare(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  child: const Text('Chia sẻ', style: TextStyle(fontWeight: FontWeight.w800)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    });
+      ),
+    );
+  },
+);
   }
 }
 

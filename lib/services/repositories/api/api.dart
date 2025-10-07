@@ -34,5 +34,5 @@ abstract class Api {
 
   Future<String?> generateVideoThumb(String bucketName, File videoFile, String userId);
 
-  Future<void> createPostWithFiles({required String userId, required String caption, required List<File> files});
+  Future<String> createPost({required String userId, required String caption, required List<File> files, required double aspectRatio});
 }

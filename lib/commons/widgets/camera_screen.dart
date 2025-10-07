@@ -1,9 +1,6 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/services.dart';
-import 'package:social_media_app/cubit/post_cubit/post_cubit.dart';
 import 'package:social_media_app/materials/app_colors.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -18,7 +15,7 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => PostCubit(), child: Theme(data: ThemeData.dark(), child: Page()));
+    return Theme(data: ThemeData.dark(), child: Page());
   }
 }
 

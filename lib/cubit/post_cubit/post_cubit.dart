@@ -9,10 +9,14 @@ import 'package:social_media_app/commons/enums/load_status.dart';
 import 'package:image/image.dart' as img;
 import 'package:social_media_app/commons/helpers/helper.dart';
 
+import '../../services/repositories/api/api.dart';
+
 part 'post_state.dart';
 
 class PostCubit extends Cubit<PostState> {
-  PostCubit() : super(PostState.init());
+  Api api;
+
+  PostCubit(this.api) : super(PostState.init());
 
   /// Load files (File) cho các selectedAssets (AssetEntity -> File)
   Future<void> loadData() async {
@@ -23,10 +27,7 @@ class PostCubit extends Cubit<PostState> {
         try {
           final file = await e.file;
           if (file != null) {
-            assets.add({
-              'file': file,
-              'type': e.type == AssetType.image ? 'image' : 'video',
-            });
+            assets.add({'file': file, 'type': e.type == AssetType.image ? 'image' : 'video'});
           }
         } catch (inner) {
           // bỏ qua asset không load được, tiếp tục các asset khác
@@ -40,15 +41,13 @@ class PostCubit extends Cubit<PostState> {
 
   /// Thêm 1 asset (thường dùng khi chụp từ camera) -> thêm vào assets (không ép thành AssetEntity)
   void addToAsset(Map<String, dynamic> asset) {
-    final updatedAssets = List<Map<String, dynamic>>.from(state.assets)
-      ..add(asset);
+    final updatedAssets = List<Map<String, dynamic>>.from(state.assets)..add(asset);
     emit(state.copyWith(assets: updatedAssets));
   }
 
   /// Thêm AssetEntity vào selectedAssets (clone list) và set selectedIndex về vị trí mới
   void addToSelectedAssets(AssetEntity asset) {
-    final updatedSelected = List<AssetEntity>.from(state.selectedAssets)
-      ..add(asset);
+    final updatedSelected = List<AssetEntity>.from(state.selectedAssets)..add(asset);
     emit(state.copyWith(selectedAssets: updatedSelected, selectedIndex: updatedSelected.length - 1));
   }
 
@@ -61,8 +60,7 @@ class PostCubit extends Cubit<PostState> {
       // asset đã tồn tại trong list
       if (idx == state.selectedIndex) {
         // chỉ xóa khi idx bằng selectedIndex hiện tại
-        final newList = List<AssetEntity>.from(list)
-          ..removeAt(idx);
+        final newList = List<AssetEntity>.from(list)..removeAt(idx);
         int newIndex;
         if (newList.isEmpty) {
           newIndex = 0;
@@ -77,8 +75,7 @@ class PostCubit extends Cubit<PostState> {
       }
     } else {
       // asset chưa tồn tại -> thêm và set index tới vị trí mới
-      final newList = List<AssetEntity>.from(list)
-        ..add(asset);
+      final newList = List<AssetEntity>.from(list)..add(asset);
       emit(state.copyWith(selectedAssets: newList, selectedIndex: newList.length - 1));
     }
   }
@@ -169,10 +166,7 @@ class PostCubit extends Cubit<PostState> {
   Future<Uint8List> cropImage(Uint8List assetBytes) async {
     final img.Image? original = img.decodeImage(assetBytes);
     if (original == null) throw Exception('Không đọc được ảnh');
-    int x = 0,
-        y = 0,
-        wid = original.width,
-        hei = original.height;
+    int x = 0, y = 0, wid = original.width, hei = original.height;
     if (original.width < original.height) {
       x = 0;
       wid = original.width;
@@ -203,9 +197,7 @@ class PostCubit extends Cubit<PostState> {
     emit(state.copyWith(loadStatus: LoadStatus.loading));
     try {
       final tmpDir = await getTemporaryDirectory();
-      final file = File('${tmpDir.path}/edited_${DateTime
-          .now()
-          .millisecondsSinceEpoch}.jpg');
+      final file = File('${tmpDir.path}/edited_${DateTime.now().millisecondsSinceEpoch}.jpg');
       await file.writeAsBytes(editedImage);
 
       final idx = state.selectedIndex.clamp(0, state.assets.length - 1);
@@ -217,8 +209,7 @@ class PostCubit extends Cubit<PostState> {
         newAssets[idx] = {'file': file, 'type': 'image'};
       }
 
-      final editedIndex = List<int>.from(state.editedAssetIndex)
-        ..add(idx);
+      final editedIndex = List<int>.from(state.editedAssetIndex)..add(idx);
       emit(state.copyWith(loadStatus: LoadStatus.done, assets: newAssets, editedAssetIndex: editedIndex));
     } catch (e) {
       emit(state.copyWith(loadStatus: LoadStatus.error));
@@ -238,8 +229,7 @@ class PostCubit extends Cubit<PostState> {
         newAssets[idx] = {'file': file, 'type': 'video'};
       }
 
-      final editedIndex = List<int>.from(state.editedAssetIndex)
-        ..add(idx);
+      final editedIndex = List<int>.from(state.editedAssetIndex)..add(idx);
       emit(state.copyWith(loadStatus: LoadStatus.done, assets: newAssets, editedAssetIndex: editedIndex));
     } catch (e) {
       emit(state.copyWith(loadStatus: LoadStatus.error));
@@ -276,8 +266,7 @@ class PostCubit extends Cubit<PostState> {
     if (state.assets.isEmpty) return;
     if (idx < 0 || idx >= state.assets.length) return;
 
-    final newAssets = List<Map<String, dynamic>>.from(state.assets)
-      ..removeAt(idx);
+    final newAssets = List<Map<String, dynamic>>.from(state.assets)..removeAt(idx);
 
     // Nếu có selectedAssets tương ứng (cố gắng xóa cùng index nếu tồn tại)
     final newSelectedAssets = List<AssetEntity>.from(state.selectedAssets);
@@ -295,8 +284,7 @@ class PostCubit extends Cubit<PostState> {
     if (state.selectedAssets.isEmpty) return;
     if (idx < 0 || idx >= state.selectedAssets.length) return;
 
-    final newSelected = List<AssetEntity>.from(state.selectedAssets)
-      ..removeAt(idx);
+    final newSelected = List<AssetEntity>.from(state.selectedAssets)..removeAt(idx);
     final newIndex = newSelected.isEmpty ? 0 : state.selectedIndex.clamp(0, newSelected.length - 1);
     emit(state.copyWith(selectedAssets: newSelected, selectedIndex: newIndex));
   }
@@ -338,4 +326,15 @@ class PostCubit extends Cubit<PostState> {
     }
   }
 
+  Future<void> createPost(String userId, String caption) async {
+    emit(state.copyWith(loadStatus: LoadStatus.loading));
+    try {
+      final files = state.assets.map((e) => e['file'] as File).toList();
+      final postId = await api.createPost(userId: userId, caption: caption, files: files, aspectRatio: state.aspectRatio);
+      emit(state.copyWith(loadStatus: LoadStatus.done, postId: postId));
+    } catch (e) {
+      emit(state.copyWith(loadStatus: LoadStatus.error, errorMessage: e.toString()));
+      throw Exception(e);
+    }
+  }
 }

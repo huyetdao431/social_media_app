@@ -1,18 +1,18 @@
 import 'dart:io';
 
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:path/path.dart' as p;
 import 'package:mime/mime.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
 import 'package:social_media_app/services/repositories/log/log.dart';
 import 'package:social_media_app/utils/get_video_duration.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
 
 import '../../../models/profile/profiles.dart';
 import '../../../utils/map_login_errors.dart';
-import '../../../utils/utils.dart';
 
 class ApiImpl implements Api {
   Log log;
@@ -322,24 +322,37 @@ class ApiImpl implements Api {
 
   @override
   Future<String?> generateVideoThumb(String bucketName, File videoFile, String userId) async {
-    final thumbPath = await VideoThumbnail.thumbnailFile(
-      video: videoFile.path,
-      imageFormat: ImageFormat.PNG,
-      maxWidth: 512, // giảm kích thước
-      quality: 75,
-    );
+    try {
+      final dir = await getTemporaryDirectory();
+      final thumbPath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}_thumb.jpg';
 
-    if (thumbPath == null) return null;
+      final command = '-i "${videoFile.path}" -ss 00:00:01 -vframes 1 -q:v 2 "$thumbPath"';
+      final session = await FFmpegKit.execute(command);
 
-    // upload thumbnail file lên Supabase Storage
-    final thumbFile = File(thumbPath);
-    final thumbUrl = await uploadFile(bucketName: bucketName, file: thumbFile, userId: userId, folder: 'thumbnails');
-    return thumbUrl;
+      final returnCode = await session.getReturnCode();
+      if (returnCode?.isValueSuccess() != true) {
+        print('Error: FFmpeg failed: ${await session.getOutput()}');
+        return null;
+      }
+
+      final thumbFile = File(thumbPath);
+      final thumbUrl = await uploadFile(
+        bucketName: bucketName,
+        file: thumbFile,
+        userId: userId,
+        folder: 'thumbnails',
+      );
+
+      return thumbUrl;
+    } catch (e, st) {
+      print('Error generating thumbnail: $e\n$st');
+      return null;
+    }
   }
 
   @override
-  Future<void> createPostWithFiles({required String userId, required String caption, required List<File> files}) async {
-    if (files.isEmpty) return;
+  Future<String> createPost({required String userId, required String caption, required List<File> files, required double aspectRatio}) async {
+    if (files.isEmpty) return '';
 
     final List<Map<String, dynamic>> medias = [];
 
@@ -370,14 +383,18 @@ class ApiImpl implements Api {
       });
     }
 
-    final rpcRes = await supabase.rpc('create_post_with_media', params: {'p_user_id': userId, 'p_caption': caption, 'p_medias': medias});
+    final rpcRes = await supabase.rpc(
+      'create_post_with_media',
+      params: {'p_user_id': userId, 'p_caption': caption, 'p_medias': medias, 'p_status': 'published', 'p_aspect_ratio': aspectRatio},
+    );
 
-    if (rpcRes.error != null) {
-      throw Exception('Create post failed: ${rpcRes.error!.message}');
+    if (rpcRes == null) {
+      throw Exception('Create post failed: RPC returned null');
     }
 
-    final createdPostId = rpcRes.data;
+    final createdPostId = (rpcRes as List).first['post_id'] as String;
     print('Post created successfully with ID: $createdPostId');
+    return createdPostId;
   }
 
   //</editor-fold>

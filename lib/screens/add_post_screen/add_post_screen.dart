@@ -6,6 +6,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:social_media_app/cubit/post_cubit/post_cubit.dart';
 import 'package:social_media_app/materials/app_colors.dart';
 import 'package:social_media_app/screens/add_post_screen/edit_media_screen.dart';
+import 'package:social_media_app/services/repositories/api/api.dart';
 
 import '../../commons/widgets/display_video.dart';
 import '../../commons/widgets/camera_screen.dart';
@@ -18,7 +19,7 @@ class AddPostScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => PostCubit(),
+      create: (context) => PostCubit(context.read<Api>()),
       child: Theme(
         data: ThemeData.dark(),
         child: const Page(),
