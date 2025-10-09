@@ -1,56 +1,73 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
-class Video extends StatefulWidget {
-  final File video;
-  final bool shouldPlay; // điều kiện phát video
-  final double aspectRatio;
+class SmartVideo extends StatefulWidget {
+  final File? file;
+  final String? url; // nếu có url thì ưu tiên url
+  final bool shouldPlay;
+  final double? aspectRatio; // optional override
 
-  const Video({super.key, required this.video, required this.shouldPlay, this.aspectRatio = 1});
+  const SmartVideo({super.key, this.file, this.url, required this.shouldPlay, this.aspectRatio})
+    : assert(file != null || url != null, 'Provide either file or url');
 
   @override
-  State<Video> createState() => _VideoState();
+  State<SmartVideo> createState() => _SmartVideoState();
 }
 
-class _VideoState extends State<Video> with RouteAware{
+class _SmartVideoState extends State<SmartVideo> {
   VideoPlayerController? _controller;
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
-    _initVideo();
+    _setupController();
   }
 
-  Future<void> _initVideo() async {
-    _controller = VideoPlayerController.file(widget.video)
-      ..setLooping(true)
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {});
-          if (widget.shouldPlay) {
-            _controller!.play();
-          }
-        }
+  Future<void> _setupController() async {
+    try {
+      if (widget.url != null) {
+        _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url!));
+      } else if (widget.file != null) {
+        _controller = VideoPlayerController.file(widget.file!);
+      }
+      if (_controller == null) return;
+
+      _controller!.setLooping(true);
+
+      await _controller!.initialize();
+      if (!mounted) return;
+      setState(() {
+        _initialized = true;
       });
+      if (widget.shouldPlay) _controller!.play();
+    } catch (e) {
+      // handle init error if needed
+    }
   }
 
   @override
-  void didUpdateWidget(covariant Video oldWidget) {
+  void didUpdateWidget(covariant SmartVideo oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Nếu file thay đổi → khởi tạo lại
-    if (oldWidget.video.path != widget.video.path) {
+    // nếu đổi source thì rebuild controller
+    final oldSrc = oldWidget.url ?? oldWidget.file?.path;
+    final newSrc = widget.url ?? widget.file?.path;
+    if (oldSrc != newSrc) {
       _controller?.dispose();
       _controller = null;
-      _initVideo();
-    } else if (oldWidget.shouldPlay != widget.shouldPlay) {
-      // Khi điều kiện phát thay đổi
+      _initialized = false;
+      _setupController();
+      return;
+    }
+
+    // nếu thay đổi play state
+    if (oldWidget.shouldPlay != widget.shouldPlay && _controller != null && _initialized) {
       if (widget.shouldPlay) {
-        _controller?.play();
+        _controller!.play();
       } else {
-        _controller?.pause();
+        _controller!.pause();
       }
     }
   }
@@ -63,28 +80,19 @@ class _VideoState extends State<Video> with RouteAware{
 
   @override
   Widget build(BuildContext context) {
-    var screenWid = MediaQuery.sizeOf(context).height;
-    if (_controller != null && _controller!.value.isInitialized) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          width: screenWid * 0.35,
-          height: screenWid * 0.35,
-          child: FittedBox(
-            fit: BoxFit.cover,
-            child: SizedBox(
-              width: _controller!.value.size.width,
-              height: _controller!.value.size.height,
-              child: VideoPlayer(_controller!),
-            ),
-          ),
-        ),
-      );
+    if (!_initialized || _controller == null) {
+      // placeholder kích thước vuông theo width
+      final width = MediaQuery.sizeOf(context).width;
+      final size = width;
+      return SizedBox(width: size, height: size, child: const Center(child: CircularProgressIndicator()));
     }
-    return SizedBox(
-      width: screenWid * 0.3,
-      height: screenWid * 0.3,
-      child: const Center(child: CircularProgressIndicator()),
+
+    final videoSize = _controller!.value.size;
+    final aspect = widget.aspectRatio ?? (videoSize.width > 0 ? videoSize.width / videoSize.height : 1.0);
+
+    return AspectRatio(
+      aspectRatio: aspect,
+      child: FittedBox(fit: BoxFit.cover, child: SizedBox(width: videoSize.width, height: videoSize.height, child: VideoPlayer(_controller!))),
     );
   }
 }

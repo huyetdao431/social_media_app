@@ -1,5 +1,5 @@
 import 'package:bloc/bloc.dart';
-import 'package:social_media_app/models/profile/profiles.dart';
+import 'package:social_media_app/models/profile/profile.dart';
 import 'package:social_media_app/services/repositories/hive/profile_repository.dart';
 
 import '../../commons/enums/load_status.dart';

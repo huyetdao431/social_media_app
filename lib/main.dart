@@ -13,7 +13,7 @@ import 'package:social_media_app/services/repositories/log/log_impl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cubit/main_cubit/main_cubit.dart';
-import 'models/profile/profiles.dart';
+import 'models/profile/profile.dart';
 
 class SimpleBlocObserver extends BlocObserver {
   const SimpleBlocObserver();
@@ -65,7 +65,7 @@ void main() async {
   );
   await Hive.initFlutter();
   Hive.registerAdapter(ProfileAdapter()); // adapter do build_runner sinh ra
-  await Hive.openBox<Profile>('profiles');
+  await Hive.openBox<Profile>('profile');
 
   runApp(RepositoryProvider<Log>(create: (context) => LogImpl(), child: Repository()));
 }

@@ -43,7 +43,7 @@ class _PreviewPostPageState extends State<_PreviewPostPage> {
 
   void _onShare(BuildContext context) {
     final cubit = context.read<PostCubit>();
-    cubit.createPost(context.read<MainCubit>().state.profile!.id, _captionController.text.trim()??'');
+    cubit.createPost(context.read<MainCubit>().state.profile!.id, _captionController.text.trim());
   }
 
   @override
@@ -249,9 +249,9 @@ class _MediaCarousel extends StatelessWidget {
                                 ? const SizedBox()
                                 : asset?.type == AssetType.image
                                 ? Image.file(file, fit: BoxFit.cover, width: double.infinity, height: double.infinity)
-                                : Video(
+                                : SmartVideo(
                               key: ValueKey(asset?.id ?? index),
-                              video: file,
+                              file: file,
                               shouldPlay: index == selectedIndex,
                             ),
                           ),

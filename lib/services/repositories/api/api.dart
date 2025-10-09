@@ -1,9 +1,11 @@
 import 'dart:io';
 
-import '../../../models/profile/profiles.dart';
+import '../../../models/profile/profile.dart';
+import '../../../models/post.dart';
 
 abstract class Api {
-  //auth
+  //<editor-fold desc="auth">
+
   Future<void> signInWithEmail(String email, String password);
 
   Future<void> signUpWithEmail(String email, String password);
@@ -17,6 +19,10 @@ abstract class Api {
   Future<void> loginWithFacebook();
 
   Future<void> logout();
+
+  //</editor-fold>
+
+  //<editor-fold desc="profile">
 
   Future<Profile> createProfile();
 
@@ -32,7 +38,22 @@ abstract class Api {
 
   Future<void> deleteProfile(String id);
 
+  //</editor-fold>
+
+  //<editor-fold desc="post">
+
   Future<String?> generateVideoThumb(String bucketName, File videoFile, String userId);
 
   Future<String> createPost({required String userId, required String caption, required List<File> files, required double aspectRatio});
+
+  Future<Post?> getPost(String postId);
+
+  Future<void> updatePostStatus(String postId, String status);
+
+  Future<void> deletePost(String postId, String userId);
+
+  Future<List<Post>> getPostsByUser({required String userId, int limit = 12, int offset = 0});
+
+  //</editor-fold>
+
 }

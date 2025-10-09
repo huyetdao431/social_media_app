@@ -1,13 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:pro_video_editor/pro_video_editor.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../commons/widgets/overlay.dart';
 import '../../cubit/post_cubit/post_cubit.dart';
 
 class EditVideoScreen extends StatelessWidget {

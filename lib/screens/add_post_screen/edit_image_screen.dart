@@ -1,7 +1,5 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:pro_image_editor/features/crop_rotate_editor/utils/crop_aspect_ratios.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:social_media_app/commons/enums/load_status.dart';

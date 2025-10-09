@@ -111,35 +111,37 @@ class PostMedia {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': this.id,
-      'postId': this.postId,
-      'mediaUrl': this.mediaUrl,
-      'mediaType': this.mediaType,
-      'createdAt': this.createdAt,
-      'updatedAt': this.updatedAt,
-      'orderIndex': this.orderIndex,
-      'isPrimary': this.isPrimary,
-      'mimeType': this.mimeType,
-      'fileSize': this.fileSize,
-      'duration': this.duration,
-      'thumbUrl': this.thumbUrl,
+      'id': id,
+      'post_id': postId,
+      'media_url': mediaUrl,
+      'media_type': mediaType,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
+      'order_index': orderIndex,
+      'is_primary': isPrimary,
+      'mime_type': mimeType,
+      'file_size': fileSize,
+      'duration': duration,
+      'thumb_url': thumbUrl,
     };
   }
 
   factory PostMedia.fromMap(Map<String, dynamic> map) {
     return PostMedia(
       id: map['id'] as String,
-      postId: map['postId'] as String,
-      mediaUrl: map['mediaUrl'] as String,
-      mediaType: map['mediaType'] as String,
-      createdAt: map['createdAt'] as DateTime,
-      updatedAt: map['updatedAt'] as DateTime,
-      orderIndex: map['orderIndex'] as int,
-      isPrimary: map['isPrimary'] as bool,
-      mimeType: map['mimeType'] as String,
-      fileSize: map['fileSize'] as int,
-      duration: map['duration'] as double,
-      thumbUrl: map['thumbUrl'] as String,
+      postId: map['post_id'] as String,
+      mediaUrl: map['media_url'] as String,
+      mediaType: map['media_type'] as String,
+      createdAt: DateTime.parse(map['created_at']),
+      updatedAt: map['updated_at'] != null
+          ? DateTime.parse(map['updated_at'])
+          : null,
+      orderIndex: map['order_index'] ?? 0,
+      isPrimary: map['is_primary'] ?? false,
+      mimeType: map['mime_type'],
+      fileSize: map['file_size'],
+      duration: (map['duration'] as num?)?.toDouble(),
+      thumbUrl: map['thumb_url'],
     );
   }
 

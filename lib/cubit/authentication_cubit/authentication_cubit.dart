@@ -57,7 +57,7 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
     emit(state.copyWith(loadStatus: LoadStatus.loading));
     try {
       final userProfile = await api.createProfile();
-      final repo =ProfileRepository();
+      final repo = ProfileRepository();
       repo.saveProfile(userProfile);
       await SharedPreferenceRepository.setLogin();
       emit(state.copyWith(loadStatus: LoadStatus.done));

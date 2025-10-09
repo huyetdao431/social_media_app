@@ -77,8 +77,8 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as PostCubit;
       return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: PreviewPostScreen()));
     case PostListScreen.route:
-      int initialIndex = (settings.arguments as Map<String, dynamic>)['initialIndex'] as int;
-      return MaterialPageRoute(builder: (context) => PostListScreen(initialIndex: initialIndex));
+      var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as ProfileCubit;
+      return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: PostListScreen()));
     case EditStoryScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as StoryCubit;
       return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: EditStoryScreen()));

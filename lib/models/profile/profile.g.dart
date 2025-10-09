@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'profiles.dart';
+part of 'profile.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
@@ -27,13 +27,16 @@ class ProfileAdapter extends TypeAdapter<Profile> {
       updatedAt: fields[7] as DateTime,
       usernameChangedAt: fields[8] as DateTime?,
       displayNameChangedAt: fields[9] as DateTime?,
+      postCount: fields[10] as int,
+      followersCount: fields[11] as int,
+      followingCount: fields[12] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, Profile obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +56,13 @@ class ProfileAdapter extends TypeAdapter<Profile> {
       ..writeByte(8)
       ..write(obj.usernameChangedAt)
       ..writeByte(9)
-      ..write(obj.displayNameChangedAt);
+      ..write(obj.displayNameChangedAt)
+      ..writeByte(10)
+      ..write(obj.postCount)
+      ..writeByte(11)
+      ..write(obj.followersCount)
+      ..writeByte(12)
+      ..write(obj.followingCount);
   }
 
   @override

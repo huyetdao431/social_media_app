@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:social_media_app/commons/enums/load_status.dart';
-import 'package:social_media_app/models/profile/profiles.dart';
+import 'package:social_media_app/models/post.dart';
+import 'package:social_media_app/models/profile/profile.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
 import 'package:social_media_app/services/repositories/hive/profile_repository.dart';
 
@@ -49,5 +50,40 @@ class ProfileCubit extends Cubit<ProfileState> {
     } catch (e) {
       throw Exception(e);
     }
+  }
+
+  Future<void> loadUserPosts() async {
+    emit(state.copyWith(loadPostStatus: LoadStatus.loading));
+    try {
+      final List<Post> userPosts = await api.getPostsByUser(userId: state.userProfile!.id);
+      emit(state.copyWith(loadPostStatus: LoadStatus.done, userPosts: userPosts));
+    } catch (e) {
+      emit(state.copyWith(loadPostStatus: LoadStatus.error, errorMessage: e.toString()));
+      throw Exception(e);
+    }
+  }
+
+  Future<void> loadMoreUserPosts() async {
+    if (state.loadPostStatus == LoadStatus.loading || !state.hasMorePosts) return;
+
+    emit(state.copyWith(loadPostStatus: LoadStatus.loading));
+    try {
+      final offset = state.userPosts.length;
+      const limit = 6;
+      final nextPosts = await api.getPostsByUser(userId: state.userProfile!.id, limit: limit, offset: offset);
+      final bool hasMore = nextPosts.length == limit;
+      if (nextPosts.isEmpty) {
+        emit(state.copyWith(loadPostStatus: LoadStatus.done, hasMorePosts: false));
+        return;
+      }
+      final updatedPosts = List<Post>.from(state.userPosts)..addAll(nextPosts);
+      emit(state.copyWith(loadPostStatus: LoadStatus.done, userPosts: updatedPosts, hasMorePosts: hasMore));
+    } catch (e) {
+      emit(state.copyWith(loadPostStatus: LoadStatus.error, errorMessage: e.toString(), hasMorePosts: false));
+    }
+  }
+
+  void setMediaIndex (int index) {
+    emit(state.copyWith(mediaIndex: index));
   }
 }

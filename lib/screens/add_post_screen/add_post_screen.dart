@@ -261,9 +261,9 @@ class _PageState extends State<Page> {
                       return const Center(child: Icon(Icons.broken_image));
                     }
                     final videoFile = snapshot.data!;
-                    return Video(
+                    return SmartVideo(
                       key: ValueKey(currentAsset!.id),
-                      video: videoFile,
+                      file: videoFile,
                       shouldPlay: currentAsset!.type == AssetType.video && !_pausePreview,
                     );
                   },

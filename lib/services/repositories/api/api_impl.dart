@@ -11,7 +11,9 @@ import 'package:social_media_app/services/repositories/log/log.dart';
 import 'package:social_media_app/utils/get_video_duration.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../models/profile/profiles.dart';
+import '../../../models/post_media.dart';
+import '../../../models/post.dart';
+import '../../../models/profile/profile.dart';
 import '../../../utils/map_login_errors.dart';
 
 class ApiImpl implements Api {
@@ -145,17 +147,14 @@ class ApiImpl implements Api {
 
     final id = user.id;
 
-    // 1) If profile exists, return it
     final existing = await supabase.from('profiles').select().eq('id', id).maybeSingle();
 
     if (existing != null) {
       return Profile.fromMap(existing);
     }
 
-    // 2) Determine provider
     final provider = (user.appMetadata['provider'] ?? '').toString().toLowerCase();
 
-    // 3) Username: part before '@' if email present, otherwise fallback to id prefix
     String baseUsername = '';
     final email = user.email;
     if (email != null && email.contains('@')) {
@@ -164,28 +163,22 @@ class ApiImpl implements Api {
       baseUsername = id.replaceAll('-', '').substring(0, 8); // fallback short id
     }
 
-    // normalize username (optional): lowercase and strip spaces
     baseUsername = baseUsername.trim().toLowerCase();
 
-    // ensure unique username in DB
     final username = await ensureUniqueUsername(baseUsername);
-    // 4) Display name
     String displayName = username;
     if (provider != 'email' && provider.isNotEmpty) {
-      // try multiple likely places for the provider name
       final userMeta = user.userMetadata;
       dynamic raw = userMeta?['raw_user_meta_data'] ?? userMeta;
       displayName =
           (raw is Map)
               ? (raw['name'] ?? raw['full_name'] ?? raw['given_name'] ?? raw['displayName'] ?? raw['username'] ?? username).toString()
               : (userMeta?['name']?.toString() ?? username);
-    } // else keep as username
+    }
 
-    // 5) Avatar: try common fields (provider picture), otherwise empty string
     String avatarUrl = '';
     final userMeta = user.userMetadata;
     if (userMeta != null) {
-      // raw_user_meta_data.picture OR picture OR avatar_url OR avatar
       final raw = userMeta['raw_user_meta_data'] ?? userMeta;
       if (raw is Map) {
         avatarUrl = (raw['picture'] ?? raw['avatar_url'] ?? raw['avatar'] ?? raw['image'])?.toString() ?? '';
@@ -193,7 +186,6 @@ class ApiImpl implements Api {
       avatarUrl = avatarUrl.isEmpty ? (userMeta['picture'] ?? userMeta['avatar_url'] ?? userMeta['avatar'])?.toString() ?? '' : avatarUrl;
     }
 
-    // 6) Insert into DB
     final nowIso = DateTime.now().toUtc().toIso8601String();
 
     final insertPayload = {
@@ -205,7 +197,6 @@ class ApiImpl implements Api {
       'is_public': true,
       'created_at': nowIso,
       'updated_at': nowIso,
-      // initialize change timestamps so user can change immediately if you want:
       'username_changed_at': nowIso,
       'displayname_changed_at': nowIso,
     };
@@ -232,9 +223,7 @@ class ApiImpl implements Api {
 
       suffix++;
       candidate = '$base$suffix';
-      // Avoid infinite loop; but practically will finish quickly
       if (suffix > 1000) {
-        // fallback to random suffix
         candidate = '${base}_${DateTime.now().millisecondsSinceEpoch}';
         return candidate;
       }
@@ -297,7 +286,8 @@ class ApiImpl implements Api {
   }
 
   //</editor-fold>
-  //<editor-fold desc="upload media">
+
+  //<editor-fold desc="upload post">
   @override
   Future<String> uploadFile({required String bucketName, required File file, required String userId, String? folder}) async {
     try {
@@ -336,12 +326,7 @@ class ApiImpl implements Api {
       }
 
       final thumbFile = File(thumbPath);
-      final thumbUrl = await uploadFile(
-        bucketName: bucketName,
-        file: thumbFile,
-        userId: userId,
-        folder: 'thumbnails',
-      );
+      final thumbUrl = await uploadFile(bucketName: bucketName, file: thumbFile, userId: userId, folder: 'thumbnails');
 
       return thumbUrl;
     } catch (e, st) {
@@ -397,5 +382,52 @@ class ApiImpl implements Api {
     return createdPostId;
   }
 
+  @override
+  Future<Post?> getPost(String postId) async {
+    final response = await supabase.from('posts').select('*, post_media(*)').eq('id', postId).maybeSingle();
+
+    if (response == null) return null;
+
+    final List<PostMedia> mediaList = (response['post_media'] as List<dynamic>).map((m) => PostMedia.fromMap(m as Map<String, dynamic>)).toList();
+
+    return Post.fromMap({...response, 'media_list': mediaList});
+  }
+
+  @override
+  Future<List<Post>> getPostsByUser({required String userId, int limit = 12, int offset = 0}) async {
+    try {
+      final response = await supabase
+          .from('posts')
+          .select('*, post_media(*)')
+          .eq('user_id', userId)
+          .neq('status', 'pending_delete')
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      if (response.isEmpty) return [];
+      List<Post> results = response.map<Post>((map) {
+        final List<PostMedia> mediaList = (map['post_media'] as List<dynamic>).map((m) => PostMedia.fromMap(m as Map<String, dynamic>)).toList();
+
+        return Post.fromMap({...map, 'media_list': mediaList});
+      }).toList();
+      return results;
+    } catch(e) {
+      throw Exception(e);
+    }
+  }
+
+  @override
+  Future<void> updatePostStatus(String postId, String status) async {
+    await supabase.from('posts').update({'status': status, 'updated_at': DateTime.now().toIso8601String()}).eq('id', postId);
+  }
+
+  @override
+  Future<void> deletePost(String postId, String userId) async {
+    await supabase.from('posts').update({'status': 'pending_delete', 'updated_at': DateTime.now().toIso8601String()}).eq('id', postId);
+
+    await supabase.rpc('decrease_post_count', params: {'user_id': userId});
+  }
+
   //</editor-fold>
+
 }

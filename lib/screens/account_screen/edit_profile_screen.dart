@@ -9,7 +9,7 @@ import 'package:social_media_app/utils/dialogs.dart';
 import 'package:social_media_app/utils/overlay.dart';
 
 import '../../cubit/profile_cubit/profile_cubit.dart';
-import '../../models/profile/profiles.dart';
+import '../../models/profile/profile.dart';
 
 class EditProfileScreen extends StatelessWidget {
   static const String route = 'EditProfileScreen';

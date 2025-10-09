@@ -169,9 +169,9 @@ class _PageState extends State<Page> {
                                                   child:
                                                       cubit.state.assets[index]['type'] == 'image'
                                                           ? Image.file(cubit.state.assets[index]['file'], fit: BoxFit.cover)
-                                                          : Video(
+                                                          : SmartVideo(
                                                             key: ValueKey(cubit.state.selectedAssets[index].id),
-                                                            video: cubit.state.assets[index]['file'],
+                                                            file: cubit.state.assets[index]['file'],
                                                             shouldPlay: index == cubit.state.selectedIndex,
                                                           ),
                                                 ),

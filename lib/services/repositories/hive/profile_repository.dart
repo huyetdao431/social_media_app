@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../../../models/profile/profiles.dart';
+import '../../../models/profile/profile.dart';
 
 class ProfileRepository {
-  static const String boxName = 'profiles';
+  static const String boxName = 'profile';
 
   Box<Profile> get _box => Hive.box<Profile>(boxName);
 

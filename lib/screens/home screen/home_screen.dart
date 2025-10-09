@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:social_media_app/cubit/home_cubit/home_cubit.dart';
 import 'package:social_media_app/screens/add_story_screen/add_story_screen.dart';
 import 'package:social_media_app/screens/story_screen/story_screen.dart';
 
-import '../../commons/widgets/post.dart';
+import '../../commons/widgets/post_widget.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   static const String route = 'HomeScreen';
 
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  @override
   Widget build(BuildContext context) {
-    return Page();
+    return BlocProvider(create: (context) => HomeCubit(), child: Page());
   }
 }
 
-class Page extends StatelessWidget {
+class Page extends StatefulWidget {
   const Page({super.key});
 
   @override
+  State<Page> createState() => _PageState();
+}
+
+class _PageState extends State<Page> {
+  @override
   Widget build(BuildContext context) {
+    return BlocBuilder<HomeCubit, HomeState>(
+  builder: (context, state) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Home'),
@@ -43,11 +47,13 @@ class Page extends StatelessWidget {
           children: [
             //dang tin
             Story(),
-            Post(),
+            // PostWidget(),
           ],
         ),
       ),
     );
+  },
+);
   }
 }
 

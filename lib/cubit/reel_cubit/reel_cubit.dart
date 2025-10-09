@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../../commons/enums/load_status.dart';

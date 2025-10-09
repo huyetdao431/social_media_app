@@ -92,31 +92,33 @@ class Post {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': this.id,
-      'userId': this.userId,
-      'caption': this.caption,
-      'createdAt': this.createdAt,
-      'likesCount': this.likesCount,
-      'commentsCount': this.commentsCount,
-      'mediaList': this.mediaList,
-      'aspectRatio': this.aspectRatio,
-      'status': this.status,
+      'id': id,
+      'user_id': userId,
+      'caption': caption,
+      'created_at': createdAt.toIso8601String(),
+      'likes_count': likesCount,
+      'comments_count': commentsCount,
+      'aspect_ratio': aspectRatio,
+      'status': status,
     };
   }
 
   factory Post.fromMap(Map<String, dynamic> map) {
+    final mediaList = map['media_list'];
+
     return Post(
       id: map['id'] as String,
-      userId: map['userId'] as String,
-      caption: map['caption'] as String,
-      createdAt: map['createdAt'] as DateTime,
-      likesCount: map['likesCount'] as int,
-      commentsCount: map['commentsCount'] as int,
-      mediaList: map['mediaList'] as List<PostMedia>,
-      aspectRatio: map['aspectRatio'] as double,
-      status: map['status'] as String,
+      userId: map['user_id'] as String,
+      caption: map['caption'] as String?,
+      createdAt: DateTime.parse(map['created_at']),
+      likesCount: map['likes_count'] ?? 0,
+      commentsCount: map['comments_count'] ?? 0,
+      mediaList: mediaList is List<PostMedia>
+          ? mediaList
+          : (mediaList as List?)?.map((m) => PostMedia.fromMap(m)).toList(),
+      aspectRatio: (map['aspect_ratio'] as num?)?.toDouble() ?? 1.0,
+      status: map['status'] ?? 'active',
     );
   }
-
   //</editor-fold>
 }
