@@ -1,0 +1,7 @@
+-keep class io.flutter.embedding.** { *; }
+-keep class io.flutter.plugins.** { *; }
+-keep class io.supabase.** { *; }
+-keep class com.supabase.** { *; }
+-keep class com.google.android.exoplayer2.** { *; }
+-keep class io.realm.** { *; }
+-keepattributes *Annotation*

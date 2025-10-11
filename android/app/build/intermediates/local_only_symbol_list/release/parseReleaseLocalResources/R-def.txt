@@ -1,0 +1,14 @@
+R_DEF: Internal format may change without notice
+local
+drawable android12splash
+drawable background
+drawable launch_background
+drawable splash
+mipmap ic_launcher
+mipmap launcher_icon
+string app_name
+string facebook_app_id
+string facebook_client_token
+string fb_login_protocol_scheme
+style LaunchTheme
+style NormalTheme

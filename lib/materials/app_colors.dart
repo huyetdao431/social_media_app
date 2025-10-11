@@ -19,4 +19,10 @@ class AppColors {
   static const Color primary = Color(0xFF3B82F6);           // Xanh chủ đạo
   static const Color secondary = Color(0xFF8B5CF6);         // Tím nhạt
   static const Color accent = Color(0xFFEC4899);            // Hồng neon (CTA)
+
+  // Skeleton / Shimmer (tùy chỉnh dễ)
+  static const Color skeletonBaseLight = Color(0xFFE6E9EE);
+  static const Color skeletonHighlightLight = Color(0xFFF7F9FB);
+  static const Color skeletonBaseDark = Color(0xFF1B2430);
+  static const Color skeletonHighlightDark = Color(0xFF2E3B4B);
 }

@@ -40,6 +40,7 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
       emit(state.copyWith(loadStatus: LoadStatus.done));
     } catch (e) {
       emit(state.copyWith(loadStatus: LoadStatus.error, errorMessage: e.toString()));
+      throw Exception(e);
     }
   }
 

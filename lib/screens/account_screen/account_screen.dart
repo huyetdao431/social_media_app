@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:social_media_app/cubit/main_cubit/main_cubit.dart';
@@ -6,6 +7,7 @@ import 'package:social_media_app/screens/account_screen/account_setting_screen.d
 import 'package:social_media_app/screens/account_screen/edit_profile_screen.dart';
 import 'package:social_media_app/screens/post_list_screen/post_list_screen.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
+import 'package:social_media_app/utils/loader/skeleton_loader.dart';
 
 import '../../commons/enums/load_status.dart';
 import '../../materials/app_text_styles.dart';
@@ -136,10 +138,9 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
             body: TabBarView(
               controller: _tabController,
               children: [
-                // Child 1: ALL posts
                 Builder(builder: (innerContext) {
                   return _buildTabContent(
-                    context: innerContext, // <<--- quan trọng: context bên trong NestedScrollView
+                    context: innerContext,
                     postsToShow: allPosts,
                     isLoading: isLoading,
                     onLoadMore: () => cubit.loadMoreUserPosts(),
@@ -150,11 +151,10 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
                   );
                 }),
 
-                // Child 2: Videos
                 Builder(builder: (innerContext) {
                   return _buildTabContent(
                     context: innerContext,
-                    postsToShow: [], // hoặc videoPosts
+                    postsToShow: [],
                     isLoading: isLoading,
                     onLoadMore: () => cubit.loadMoreUserPosts(),
                     onTapItem: (index) {
@@ -186,7 +186,7 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
 
     // Nếu đang load lần đầu và chưa có post => loader trung tâm
     if (isLoading && postsToShow.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return SkeletonLoader.skeletonSliverGrid(context: context);
     }
 
     // Nếu không load và không có post => "No Post Yet"
@@ -231,17 +231,11 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Container(
-                        color: Theme.of(context).colorScheme.surface,
-                        child: thumb.isNotEmpty
-                            ? Image.network(
-                          thumb,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          errorBuilder: (_, __, ___) => const SizedBox(),
-                        )
-                            : const SizedBox(),
+                      CachedNetworkImage(
+                        imageUrl: thumb,
+                        fit: BoxFit.cover,
+                        placeholder: (ctx, url) => Container(color: Colors.grey[300]),
+                        errorWidget: (ctx, url, error) => Container(color: Colors.grey, child: const Icon(Icons.error)),
                       ),
                       if (hasMany)
                         Positioned(top: 4, right: 4, child: Icon(Icons.copy, size: 24, color: Colors.white.withAlpha(230)))
@@ -303,11 +297,19 @@ class _ProfileHeader extends StatelessWidget {
             Stack(
               alignment: Alignment.bottomRight,
               children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: surface,
-                  backgroundImage:
-                      avatarUrl != null && avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : const AssetImage('assets/images/avt_13.png') as ImageProvider,
+                Container(
+                  height: 72,
+                  width: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle
+                  ),
+                  clipBehavior: Clip.hardEdge,
+                  child: CachedNetworkImage(
+                    imageUrl: avatarUrl!,
+                    fit: BoxFit.cover,
+                    placeholder: (ctx, url) => Container(color: Colors.grey[300]),
+                    errorWidget: (ctx, url, error) => Container(color: Colors.grey, child: const Icon(Icons.error)),
+                  ),
                 ),
                 Container(
                   margin: const EdgeInsets.only(right: 2, bottom: 2),
@@ -350,28 +352,33 @@ class _ProfileHeader extends StatelessWidget {
 
         Row(
           children: [
-            ElevatedButton(
-              onPressed: onEditProfile,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                textStyle: theme.textTheme.bodyMedium,
+            Expanded(
+              child: ElevatedButton(
+                onPressed: onEditProfile,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.onSurface,
+                  foregroundColor: theme.colorScheme.surface,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  textStyle: theme.textTheme.bodyMedium,
+                ),
+                child: const Text('Edit Profile'),
               ),
-              child: const Text('Edit Profile'),
             ),
-            const SizedBox(width: 8),
-            OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                foregroundColor: theme.colorScheme.primary,
-                side: BorderSide(color: theme.colorScheme.primary.withAlpha(31)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                textStyle: theme.textTheme.bodyMedium,
+            const SizedBox(width: 8,),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () {},
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: theme.colorScheme.onSurface,
+                  backgroundColor: theme.colorScheme.surface,
+                  side: BorderSide(color: theme.colorScheme.primary.withAlpha(31)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  textStyle: theme.textTheme.bodyMedium,
+                ),
+                child: const Text('Follow'),
               ),
-              child: const Text('Follow'),
             ),
           ],
         ),

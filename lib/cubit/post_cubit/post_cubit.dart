@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_media_app/commons/enums/load_status.dart';
 import 'package:image/image.dart' as img;
-import 'package:social_media_app/commons/helpers/helper.dart';
+import 'package:social_media_app/utils/gallery_saver.dart';
 
 import '../../services/repositories/api/api.dart';
 
@@ -237,19 +237,34 @@ class PostCubit extends Cubit<PostState> {
 
   /// Lưu tất cả assets hiện đang có vào gallery (image/video)
   Future<void> saveToGallery() async {
-    emit(state.copyWith(loadStatus: LoadStatus.loading));
+    if(state.loadStatus != LoadStatus.loading) {
+      emit(state.copyWith(loadStatus: LoadStatus.loading));
+    }
     try {
+      int index = 0;
+      List<Map<String,dynamic>> assets = [...state.assets];
       for (final fileMap in state.assets) {
         final type = fileMap['type'] as String?;
         final file = fileMap['file'] as File?;
-        if (file == null || !(await file.exists())) continue;
-        if (type == 'image') {
-          await Helper.saveImageToGallery(file);
+        if (file == null || !(await file.exists())) {
+          continue;
         } else {
-          await Helper.saveVideoToGallery(file);
+          index ++;
         }
+        String filePath = '';
+        if (!state.editedAssetIndex.contains(index)) {
+          filePath = file.path;
+        } else {
+          if (type == 'image') {
+            filePath = await GallerySaver.saveImageToGallery(file);
+          } else {
+            filePath = await GallerySaver.saveVideoToGallery(file);
+          }
+        }
+        assets[index]['filePath'] = filePath;
+        index++;
       }
-      emit(state.copyWith(loadStatus: LoadStatus.done));
+      emit(state.copyWith(assets: assets));
     } catch (e) {
       emit(state.copyWith(loadStatus: LoadStatus.error));
     }
@@ -328,6 +343,7 @@ class PostCubit extends Cubit<PostState> {
   Future<void> createPost(String userId, String caption) async {
     emit(state.copyWith(loadStatus: LoadStatus.loading));
     try {
+      saveToGallery();
       final files = state.assets.map((e) => e['file'] as File).toList();
       final postId = await api.createPost(userId: userId, caption: caption, files: files, aspectRatio: state.aspectRatio);
       emit(state.copyWith(loadStatus: LoadStatus.done, postId: postId));

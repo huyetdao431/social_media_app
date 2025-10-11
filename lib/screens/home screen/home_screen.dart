@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:social_media_app/cubit/home_cubit/home_cubit.dart';
 import 'package:social_media_app/screens/add_story_screen/add_story_screen.dart';
 import 'package:social_media_app/screens/story_screen/story_screen.dart';
+import 'package:social_media_app/utils/loader/post_skeleton_loader.dart';
 
 import '../../commons/widgets/post_widget.dart';
 
@@ -47,7 +48,7 @@ class _PageState extends State<Page> {
           children: [
             //dang tin
             Story(),
-            // PostWidget(),
+            PostWidgetSkeleton(),
           ],
         ),
       ),

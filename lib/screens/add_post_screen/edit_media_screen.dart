@@ -30,6 +30,7 @@ class Page extends StatefulWidget {
 
 class _PageState extends State<Page> {
   final PageController _controller = PageController(viewportFraction: 0.9);
+
   // bool shouldPlayVideo = false;
 
   @override
@@ -58,9 +59,15 @@ class _PageState extends State<Page> {
   }
 
   void _gotoEditScreen(PostCubit cubit) {
-    cubit.state.selectedAssets[cubit.state.selectedIndex].type == AssetType.image
-        ? Navigator.of(context).pushNamed(EditImageScreen.route, arguments: {'cubit': cubit})
-        : Navigator.of(context).pushNamed(EditVideoScreen.route, arguments: {'cubit': cubit});
+    if(cubit.state.selectedAssets.isNotEmpty) {
+      cubit.state.selectedAssets[cubit.state.selectedIndex].type == AssetType.image
+          ? Navigator.of(context).pushNamed(EditImageScreen.route, arguments: {'cubit': cubit})
+          : Navigator.of(context).pushNamed(EditVideoScreen.route, arguments: {'cubit': cubit});
+    } else {
+      cubit.state.assets[cubit.state.selectedIndex]['type'] == 'image'
+          ? Navigator.of(context).pushNamed(EditImageScreen.route, arguments: {'cubit': cubit})
+          : Navigator.of(context).pushNamed(EditVideoScreen.route, arguments: {'cubit': cubit});
+    }
   }
 
   @override
@@ -170,7 +177,9 @@ class _PageState extends State<Page> {
                                                       cubit.state.assets[index]['type'] == 'image'
                                                           ? Image.file(cubit.state.assets[index]['file'], fit: BoxFit.cover)
                                                           : SmartVideo(
-                                                            key: ValueKey(cubit.state.selectedAssets[index].id),
+                                                            key: ValueKey(
+                                                              cubit.state.selectedAssets.isNotEmpty ? cubit.state.selectedAssets[index].id : ValueKey('camera'),
+                                                            ),
                                                             file: cubit.state.assets[index]['file'],
                                                             shouldPlay: index == cubit.state.selectedIndex,
                                                           ),
@@ -256,11 +265,7 @@ class _PageState extends State<Page> {
                                   color: AppColors.textLight.withAlpha(32),
                                 ),
                                 clipBehavior: Clip.hardEdge,
-                                child: Stack(
-                                  children: [
-                                    Center(child: Icon(Icons.add, color: AppColors.textLight)),
-                                  ],
-                                ),
+                                child: Stack(children: [Center(child: Icon(Icons.add, color: AppColors.textLight))]),
                               ),
                             ),
                             GestureDetector(

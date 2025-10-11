@@ -1,0 +1,387 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.social_media_app"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.CAMERA" />
+11-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:4:5-64
+11-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:4:22-62
+12    <uses-permission
+12-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:5:5-79
+13        android:name="android.permission.READ_EXTERNAL_STORAGE"
+13-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:5:22-77
+14        android:maxSdkVersion="32" />
+14-->[:photo_manager] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\photo_manager-3.7.1\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:9-35
+15    <uses-permission
+15-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:6:5-80
+16        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+16-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:6:22-78
+17        android:maxSdkVersion="28" />
+17-->[:camera_android_camerax] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\camera_android_camerax-0.6.19+1\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:13:9-35
+18    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+18-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:7:5-74
+18-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:7:22-72
+19    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+19-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:8:5-75
+19-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:8:22-73
+20    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+20-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:9:5-74
+20-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:9:22-72
+21
+22    <queries>
+22-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:71:5-76:15
+23        <intent>
+23-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:72:9-75:18
+24            <action android:name="android.intent.action.PROCESS_TEXT" />
+24-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:73:13-72
+24-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:73:21-70
+25
+26            <data android:mimeType="text/plain" />
+26-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:74:13-50
+26-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:74:19-48
+27        </intent>
+28    </queries>
+29
+30    <uses-feature android:name="android.hardware.camera.any" />
+30-->[:camera_android_camerax] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\camera_android_camerax-0.6.19+1\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:7:5-64
+30-->[:camera_android_camerax] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\camera_android_camerax-0.6.19+1\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:7:19-61
+31
+32    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+32-->[:camera_android_camerax] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\camera_android_camerax-0.6.19+1\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:5-71
+32-->[:camera_android_camerax] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\camera_android_camerax-0.6.19+1\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:22-68
+33    <uses-permission android:name="android.permission.INTERNET" />
+33-->[:google_sign_in_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\google_sign_in_android-6.2.1\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:7:5-67
+33-->[:google_sign_in_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\google_sign_in_android-6.2.1\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:7:22-64
+34    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+34-->[androidx.media3:media3-common:1.7.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\d64bdb703effe13f424bfdf6c0993b12\transformed\jetified-media3-common-1.7.1\AndroidManifest.xml:22:5-79
+34-->[androidx.media3:media3-common:1.7.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\d64bdb703effe13f424bfdf6c0993b12\transformed\jetified-media3-common-1.7.1\AndroidManifest.xml:22:22-76
+35
+36    <permission
+36-->[androidx.core:core:1.13.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:22:5-24:47
+37        android:name="com.example.social_media_app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+37-->[androidx.core:core:1.13.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:23:9-81
+38        android:protectionLevel="signature" />
+38-->[androidx.core:core:1.13.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:24:9-44
+39
+40    <uses-permission android:name="com.example.social_media_app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+40-->[androidx.core:core:1.13.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:26:5-97
+40-->[androidx.core:core:1.13.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:26:22-94
+41
+42    <application
+43        android:name="android.app.Application"
+43-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:12:9-42
+44        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+44-->[androidx.core:core:1.13.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:28:18-86
+45        android:extractNativeLibs="false"
+46        android:icon="@mipmap/launcher_icon"
+46-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:14:9-45
+47        android:label="Pixora" >
+47-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:13:9-31
+48        <meta-data
+48-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:17:9-18:54
+49            android:name="com.facebook.sdk.ApplicationId"
+49-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:17:20-65
+50            android:value="@string/facebook_app_id" />
+50-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:18:13-52
+51        <meta-data
+51-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:19:9-20:60
+52            android:name="com.facebook.sdk.ClientToken"
+52-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:19:20-63
+53            android:value="@string/facebook_client_token" />
+53-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:20:13-58
+54
+55        <activity
+55-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:22:9-24:48
+56            android:name="com.facebook.FacebookActivity"
+56-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:22:19-63
+57            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+57-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:23:13-96
+58            android:label="@string/app_name" />
+58-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:24:13-45
+59        <activity
+59-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:26:9-35:20
+60            android:name="com.facebook.CustomTabActivity"
+60-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:27:13-58
+61            android:exported="true" >
+61-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:28:13-36
+62            <intent-filter>
+62-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:29:13-34:29
+63                <action android:name="android.intent.action.VIEW" />
+63-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:30:17-69
+63-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:30:25-66
+64
+65                <category android:name="android.intent.category.DEFAULT" />
+65-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:31:17-76
+65-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:31:27-73
+66                <category android:name="android.intent.category.BROWSABLE" />
+66-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:32:17-78
+66-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:32:27-75
+67
+68                <data android:scheme="@string/fb_login_protocol_scheme" />
+68-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:74:13-50
+68-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:33:23-72
+69            </intent-filter>
+70        </activity>
+71        <activity
+71-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:37:9-64:20
+72            android:name="com.example.social_media_app.MainActivity"
+72-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:38:13-41
+73            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+73-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:43:13-163
+74            android:exported="true"
+74-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:39:13-36
+75            android:hardwareAccelerated="true"
+75-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:44:13-47
+76            android:launchMode="singleTop"
+76-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:40:13-43
+77            android:taskAffinity=""
+77-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:41:13-36
+78            android:theme="@style/LaunchTheme"
+78-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:42:13-47
+79            android:windowSoftInputMode="adjustResize" >
+79-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:45:13-55
+80            <intent-filter>
+80-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:46:13-49:29
+81                <action android:name="android.intent.action.MAIN" />
+81-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:47:17-68
+81-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:47:25-66
+82
+83                <category android:name="android.intent.category.LAUNCHER" />
+83-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:48:17-76
+83-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:48:27-74
+84            </intent-filter>
+85
+86            <meta-data
+86-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:50:13-52:56
+87                android:name="io.flutter.embedding.android.NormalTheme"
+87-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:51:17-72
+88                android:resource="@style/NormalTheme" />
+88-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:52:17-54
+89
+90            <intent-filter>
+90-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:53:13-59:29
+91                <action android:name="android.intent.action.VIEW" />
+91-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:30:17-69
+91-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:30:25-66
+92
+93                <category android:name="android.intent.category.DEFAULT" />
+93-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:31:17-76
+93-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:31:27-73
+94                <category android:name="android.intent.category.BROWSABLE" />
+94-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:32:17-78
+94-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:32:27-75
+95
+96                <data
+96-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:74:13-50
+97                    android:host="auth-callback"
+97-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:57:46-74
+98                    android:scheme="myapp" />
+98-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:33:23-72
+99                <data
+99-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:74:13-50
+100                    android:host="password-reset-callback"
+100-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:57:46-74
+101                    android:scheme="myapp" />
+101-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:33:23-72
+102            </intent-filter>
+103
+104            <meta-data
+104-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:61:13-63:72
+105                android:name="com.google.android.gms.version"
+105-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:62:17-62
+106                android:value="@integer/google_play_services_version" />
+106-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:63:17-70
+107        </activity>
+108
+109        <meta-data
+109-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:66:9-68:33
+110            android:name="flutterEmbedding"
+110-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:67:13-44
+111            android:value="2" />
+111-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:68:13-30
+112
+113        <service
+113-->[androidx.camera:camera-camera2:1.5.0-beta01] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\65f8a731866b2db1fdba6bbeea6a3bba\transformed\jetified-camera-camera2-1.5.0-beta01\AndroidManifest.xml:24:9-33:19
+114            android:name="androidx.camera.core.impl.MetadataHolderService"
+114-->[androidx.camera:camera-camera2:1.5.0-beta01] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\65f8a731866b2db1fdba6bbeea6a3bba\transformed\jetified-camera-camera2-1.5.0-beta01\AndroidManifest.xml:25:13-75
+115            android:enabled="false"
+115-->[androidx.camera:camera-camera2:1.5.0-beta01] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\65f8a731866b2db1fdba6bbeea6a3bba\transformed\jetified-camera-camera2-1.5.0-beta01\AndroidManifest.xml:26:13-36
+116            android:exported="false" >
+116-->[androidx.camera:camera-camera2:1.5.0-beta01] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\65f8a731866b2db1fdba6bbeea6a3bba\transformed\jetified-camera-camera2-1.5.0-beta01\AndroidManifest.xml:27:13-37
+117            <meta-data
+117-->[androidx.camera:camera-camera2:1.5.0-beta01] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\65f8a731866b2db1fdba6bbeea6a3bba\transformed\jetified-camera-camera2-1.5.0-beta01\AndroidManifest.xml:30:13-32:89
+118                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
+118-->[androidx.camera:camera-camera2:1.5.0-beta01] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\65f8a731866b2db1fdba6bbeea6a3bba\transformed\jetified-camera-camera2-1.5.0-beta01\AndroidManifest.xml:31:17-103
+119                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
+119-->[androidx.camera:camera-camera2:1.5.0-beta01] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\65f8a731866b2db1fdba6bbeea6a3bba\transformed\jetified-camera-camera2-1.5.0-beta01\AndroidManifest.xml:32:17-86
+120        </service>
+121
+122        <provider
+122-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:9-17:20
+123            android:name="io.flutter.plugins.imagepicker.ImagePickerFileProvider"
+123-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:13-82
+124            android:authorities="com.example.social_media_app.flutter.image_provider"
+124-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:13-74
+125            android:exported="false"
+125-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:12:13-37
+126            android:grantUriPermissions="true" >
+126-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:13:13-47
+127            <meta-data
+127-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:14:13-16:75
+128                android:name="android.support.FILE_PROVIDER_PATHS"
+128-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:15:17-67
+129                android:resource="@xml/flutter_image_picker_file_paths" />
+129-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:16:17-72
+130        </provider> <!-- Trigger Google Play services to install the backported photo picker module. -->
+131        <service
+131-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:19:9-31:19
+132            android:name="com.google.android.gms.metadata.ModuleDependencies"
+132-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:20:13-78
+133            android:enabled="false"
+133-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:21:13-36
+134            android:exported="false" >
+134-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:22:13-37
+135            <intent-filter>
+135-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:24:13-26:29
+136                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+136-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:25:17-94
+136-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:25:25-91
+137            </intent-filter>
+138
+139            <meta-data
+139-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:28:13-30:36
+140                android:name="photopicker_activity:0:required"
+140-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:29:17-63
+141                android:value="" />
+141-->[:image_picker_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:30:17-33
+142        </service>
+143
+144        <activity
+144-->[:url_launcher_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\url_launcher_android-6.3.20\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:8:9-11:74
+145            android:name="io.flutter.plugins.urllauncher.WebViewActivity"
+145-->[:url_launcher_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\url_launcher_android-6.3.20\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:13-74
+146            android:exported="false"
+146-->[:url_launcher_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\url_launcher_android-6.3.20\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:13-37
+147            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+147-->[:url_launcher_android] C:\Users\ADMIN\AppData\Local\Pub\Cache\hosted\pub.dev\url_launcher_android-6.3.20\android\build\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:13-71
+148        <activity
+148-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\41fd65a6a815b5614b87b654f9cfd65e\transformed\jetified-play-services-auth-21.0.0\AndroidManifest.xml:23:9-27:75
+149            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
+149-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\41fd65a6a815b5614b87b654f9cfd65e\transformed\jetified-play-services-auth-21.0.0\AndroidManifest.xml:24:13-93
+150            android:excludeFromRecents="true"
+150-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\41fd65a6a815b5614b87b654f9cfd65e\transformed\jetified-play-services-auth-21.0.0\AndroidManifest.xml:25:13-46
+151            android:exported="false"
+151-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\41fd65a6a815b5614b87b654f9cfd65e\transformed\jetified-play-services-auth-21.0.0\AndroidManifest.xml:26:13-37
+152            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+152-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\41fd65a6a815b5614b87b654f9cfd65e\transformed\jetified-play-services-auth-21.0.0\AndroidManifest.xml:27:13-72
+153        <!--
+154            Service handling Google Sign-In user revocation. For apps that do not integrate with
+155            Google Sign-In, this service will never be started.
+156        -->
+157        <service
+157-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\41fd65a6a815b5614b87b654f9cfd65e\transformed\jetified-play-services-auth-21.0.0\AndroidManifest.xml:33:9-37:51
+158            android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
+158-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\41fd65a6a815b5614b87b654f9cfd65e\transformed\jetified-play-services-auth-21.0.0\AndroidManifest.xml:34:13-89
+159            android:exported="true"
+159-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\41fd65a6a815b5614b87b654f9cfd65e\transformed\jetified-play-services-auth-21.0.0\AndroidManifest.xml:35:13-36
+160            android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"
+160-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\41fd65a6a815b5614b87b654f9cfd65e\transformed\jetified-play-services-auth-21.0.0\AndroidManifest.xml:36:13-107
+161            android:visibleToInstantApps="true" />
+161-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\41fd65a6a815b5614b87b654f9cfd65e\transformed\jetified-play-services-auth-21.0.0\AndroidManifest.xml:37:13-48
+162
+163        <activity
+163-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\d4003e89e11d20e7aac223715520d9d9\transformed\jetified-play-services-base-18.0.1\AndroidManifest.xml:20:9-22:45
+164            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+164-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\d4003e89e11d20e7aac223715520d9d9\transformed\jetified-play-services-base-18.0.1\AndroidManifest.xml:20:19-85
+165            android:exported="false"
+165-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\d4003e89e11d20e7aac223715520d9d9\transformed\jetified-play-services-base-18.0.1\AndroidManifest.xml:22:19-43
+166            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+166-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\d4003e89e11d20e7aac223715520d9d9\transformed\jetified-play-services-base-18.0.1\AndroidManifest.xml:21:19-78
+167
+168        <meta-data
+168-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:61:13-63:72
+169            android:name="com.google.android.gms.version"
+169-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:62:17-62
+170            android:value="@integer/google_play_services_version" />
+170-->D:\ADMIN\Documents\AndroidStudioProjects\java\social_media_app\android\app\src\main\AndroidManifest.xml:63:17-70
+171
+172        <uses-library
+172-->[androidx.window:window:1.2.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:23:9-25:40
+173            android:name="androidx.window.extensions"
+173-->[androidx.window:window:1.2.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:24:13-54
+174            android:required="false" />
+174-->[androidx.window:window:1.2.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:25:13-37
+175        <uses-library
+175-->[androidx.window:window:1.2.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:26:9-28:40
+176            android:name="androidx.window.sidecar"
+176-->[androidx.window:window:1.2.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:27:13-51
+177            android:required="false" />
+177-->[androidx.window:window:1.2.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:28:13-37
+178
+179        <provider
+179-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:24:9-32:20
+180            android:name="androidx.startup.InitializationProvider"
+180-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:25:13-67
+181            android:authorities="com.example.social_media_app.androidx-startup"
+181-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:26:13-68
+182            android:exported="false" >
+182-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:27:13-37
+183            <meta-data
+183-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
+184                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+184-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
+185                android:value="androidx.startup" />
+185-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
+186            <meta-data
+186-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
+187                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+187-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
+188                android:value="androidx.startup" />
+188-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
+189        </provider>
+190
+191        <receiver
+191-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
+192            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+192-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
+193            android:directBootAware="false"
+193-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
+194            android:enabled="true"
+194-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
+195            android:exported="true"
+195-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
+196            android:permission="android.permission.DUMP" >
+196-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
+197            <intent-filter>
+197-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
+198                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+198-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
+198-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
+199            </intent-filter>
+200            <intent-filter>
+200-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
+201                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+201-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
+201-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
+202            </intent-filter>
+203            <intent-filter>
+203-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
+204                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+204-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
+204-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
+205            </intent-filter>
+206            <intent-filter>
+206-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
+207                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+207-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
+207-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\ADMIN\.gradle\caches\8.10.2\transforms\4051a23600791cfac099a18cb55e807e\transformed\jetified-profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
+208            </intent-filter>
+209        </receiver>
+210    </application>
+211
+212</manifest>

@@ -87,20 +87,18 @@ class Provider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: BlocBuilder<MainCubit, MainState>(
-        builder: (context, state) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            scrollBehavior: MaterialScrollBehavior().copyWith(dragDevices: {PointerDeviceKind.mouse, PointerDeviceKind.touch, PointerDeviceKind.trackpad}),
-            theme: AppTheme.light,
-            darkTheme: AppTheme.dark,
-            themeMode: state.isLightTheme ? ThemeMode.light : ThemeMode.dark,
-            onGenerateRoute: mainRoute,
-            initialRoute: SplashScreen.route,
-          );
-        },
-      ),
+    return BlocBuilder<MainCubit, MainState>(
+      builder: (context, state) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          scrollBehavior: MaterialScrollBehavior().copyWith(dragDevices: {PointerDeviceKind.mouse, PointerDeviceKind.touch, PointerDeviceKind.trackpad}),
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: state.isLightTheme ? ThemeMode.light : ThemeMode.dark,
+          onGenerateRoute: mainRoute,
+          initialRoute: SplashScreen.route,
+        );
+      },
     );
   }
 }

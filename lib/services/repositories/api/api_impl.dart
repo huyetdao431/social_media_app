@@ -121,7 +121,8 @@ class ApiImpl implements Api {
       final errorMessage = mapAuthExceptionMessage(e, provider: 'Google');
       throw errorMessage;
     } catch (e) {
-      throw 'Đăng nhập bằng Google thất bại.';
+      // throw 'Đăng nhập bằng Google thất bại.';
+      throw Exception(e);
     }
   }
 
