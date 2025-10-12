@@ -2,7 +2,7 @@ part of 'comment_bloc.dart';
 
 class CommentState {
   final LoadStatus loadStatus;
-  final LoadStatus loadReplyStatus;
+  final Map<String, LoadStatus> replyLoadStatus;
   final LoadStatus loadCommentStatus;
   final List<Comment> comments;
   final Map<String, List<Comment>> replies;
@@ -12,7 +12,7 @@ class CommentState {
 
   const CommentState.init({
     this.loadStatus = LoadStatus.init,
-    this.loadReplyStatus = LoadStatus.init,
+    this.replyLoadStatus = const {},
     this.loadCommentStatus = LoadStatus.init,
     this.comments = const [],
     this.replies = const {},
@@ -24,7 +24,7 @@ class CommentState {
   //<editor-fold desc="Data Methods">
   const CommentState({
     required this.loadStatus,
-    required this.loadReplyStatus,
+    required this.replyLoadStatus,
     required this.loadCommentStatus,
     required this.comments,
     required this.replies,
@@ -39,7 +39,7 @@ class CommentState {
       (other is CommentState &&
           runtimeType == other.runtimeType &&
           loadStatus == other.loadStatus &&
-          loadReplyStatus == other.loadReplyStatus &&
+          replyLoadStatus == other.replyLoadStatus &&
           loadCommentStatus == other.loadCommentStatus &&
           comments == other.comments &&
           replies == other.replies &&
@@ -50,7 +50,7 @@ class CommentState {
   @override
   int get hashCode =>
       loadStatus.hashCode ^
-      loadReplyStatus.hashCode ^
+      replyLoadStatus.hashCode ^
       loadCommentStatus.hashCode ^
       comments.hashCode ^
       replies.hashCode ^
@@ -62,7 +62,7 @@ class CommentState {
   String toString() {
     return 'CommentState{' +
         ' loadStatus: $loadStatus,' +
-        ' loadReplyStatus: $loadReplyStatus,' +
+        ' replyLoadStatus: $replyLoadStatus,' +
         ' loadCommentStatus: $loadCommentStatus,' +
         ' comments: $comments,' +
         ' replies: $replies,' +
@@ -74,7 +74,7 @@ class CommentState {
 
   CommentState copyWith({
     LoadStatus? loadStatus,
-    LoadStatus? loadReplyStatus,
+    Map<String, LoadStatus>? replyLoadStatus,
     LoadStatus? loadCommentStatus,
     List<Comment>? comments,
     Map<String, List<Comment>>? replies,
@@ -84,7 +84,7 @@ class CommentState {
   }) {
     return CommentState(
       loadStatus: loadStatus ?? this.loadStatus,
-      loadReplyStatus: loadReplyStatus ?? this.loadReplyStatus,
+      replyLoadStatus: replyLoadStatus ?? this.replyLoadStatus,
       loadCommentStatus: loadCommentStatus ?? this.loadCommentStatus,
       comments: comments ?? this.comments,
       replies: replies ?? this.replies,
@@ -97,7 +97,7 @@ class CommentState {
   Map<String, dynamic> toMap() {
     return {
       'loadStatus': this.loadStatus,
-      'loadReplyStatus': this.loadReplyStatus,
+      'replyLoadStatus': this.replyLoadStatus,
       'loadCommentStatus': this.loadCommentStatus,
       'comments': this.comments,
       'replies': this.replies,
@@ -110,7 +110,7 @@ class CommentState {
   factory CommentState.fromMap(Map<String, dynamic> map) {
     return CommentState(
       loadStatus: map['loadStatus'] as LoadStatus,
-      loadReplyStatus: map['loadReplyStatus'] as LoadStatus,
+      replyLoadStatus: map['replyLoadStatus'] as Map<String, LoadStatus>,
       loadCommentStatus: map['loadCommentStatus'] as LoadStatus,
       comments: map['comments'] as List<Comment>,
       replies: map['replies'] as Map<String, List<Comment>>,

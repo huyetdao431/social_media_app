@@ -32,8 +32,10 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
         final theme = Theme.of(context);
         var bloc = context.read<CommentBloc>();
         final comment = widget.depth == 0 ? bloc.state.comments[widget.index] : bloc.state.replies[widget.parentId]![widget.index];
+        final replies = state.replies[comment.id] ?? [];
+        final replyStatus = state.replyLoadStatus[comment.id] ?? LoadStatus.init;
         return Padding(
-          padding: EdgeInsets.only(left: widget.depth == 0 ? 0 : 40, top: 8, bottom: 8),
+          padding: EdgeInsets.only(top: 8, bottom: 8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -87,7 +89,12 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                         const SizedBox(width: 8),
                         Text('${comment.likeCount + (isLiked ? 1 : 0)}'),
                         const SizedBox(width: 16),
-                        GestureDetector(onTap: widget.onReply, child: Text('Reply', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))),
+                        GestureDetector(onTap:() {
+                          widget.onReply!();
+                          setState(() {
+                            showReplies = true;
+                          });
+                        }, child: Text('Reply', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))),
                         if (widget.depth < widget.maxDepth && comment.replyCount > 0)
                           Row(
                             children: [
@@ -97,9 +104,13 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                                   setState(() {
                                     showReplies = !showReplies;
                                   });
-                                  bloc.add(GetReplies(commentId: comment.id));
+                                  if (!bloc.state.replies.containsKey(comment.id)) {
+                                    bloc.add(GetReplies(commentId: comment.id));
+                                  }
                                 },
-                                child: Text(showReplies ? 'Hide ${comment.replyCount} replies' : 'Show ${comment.replyCount} replies'),
+                                child: Text(showReplies
+                                    ? 'Hide ${comment.replyCount} replies'
+                                    : 'Show ${comment.replyCount} replies'),
                               ),
                             ],
                           ),
@@ -109,15 +120,27 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                     if (showReplies && widget.depth < widget.maxDepth)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
-                        child:
-                            bloc.state.loadReplyStatus == LoadStatus.loading
-                                ? CommentTileSkeleton(depth: 1,)
-                                : Column(
-                                  children: [
-                                    for (var i = 0; i < bloc.state.replies[comment.id]!.length; i++)
-                                      CommentTile(index: i, parentId: comment.id, depth: widget.depth + 1, maxDepth: widget.maxDepth, onReply: widget.onReply),
-                                  ],
-                                ),
+                        child: Builder(
+                          builder: (context) {
+                            if (replyStatus == LoadStatus.loading && replies.isEmpty) {
+                              return const CommentTileSkeleton(depth: 1);
+                            }
+                            return Column(
+                              children: [
+                                for (var i = 0; i < replies.length; i++)
+                                  CommentTile(
+                                    index: i,
+                                    parentId: comment.id,
+                                    depth: widget.depth + 1,
+                                    maxDepth: widget.maxDepth,
+                                    onReply: widget.onReply,
+                                  ),
+                                if (replyStatus == LoadStatus.loading)
+                                  const CommentTileSkeleton(depth: 1),
+                              ],
+                            );
+                          },
+                        ),
                       ),
                   ],
                 ),

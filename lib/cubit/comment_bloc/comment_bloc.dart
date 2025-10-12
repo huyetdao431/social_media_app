@@ -21,33 +21,42 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
   }
 
   Future<void> _createComment(CreateComment event, Emitter<CommentState> emit) async {
-    emit(state.copyWith(loadCommentStatus : LoadStatus.loading));
+    emit(state.copyWith(loadCommentStatus: LoadStatus.loading));
     try {
       print('DEBUG: postId=${event.postId}, userId=${event.userId}');
       final comment = await api.createComment(postId: event.postId, userId: event.userId, content: event.content);
       final updatedComment = List<Comment>.from(state.comments);
       updatedComment.insert(0, comment);
-      emit(state.copyWith(loadCommentStatus : LoadStatus.done, userComment: comment, comments: updatedComment));
+      emit(state.copyWith(loadCommentStatus: LoadStatus.done, userComment: comment, comments: updatedComment));
     } catch (e) {
-      emit(state.copyWith(loadCommentStatus : LoadStatus.error, errorMessage: e.toString()));
+      emit(state.copyWith(loadCommentStatus: LoadStatus.error, errorMessage: e.toString()));
       throw Exception(e);
     }
   }
 
   Future<void> _createReply(CreateReply event, Emitter<CommentState> emit) async {
-    emit(state.copyWith(loadReplyStatus: LoadStatus.loading));
+    final updatedStatus = Map<String, LoadStatus>.from(state.replyLoadStatus);
+    updatedStatus[event.parentId] = LoadStatus.loading;
+    emit(state.copyWith(replyLoadStatus: updatedStatus));
+
     try {
-      print('DEBUG: postId: ${event.postId}');
-      print('DEBUG: parentId: ${event.parentId}');
-      print('DEBUG: content: ${event.content}');
-      print('DEBUG: userId: ${event.userId}');
       final comment = await api.createComment(postId: event.postId, userId: event.userId, content: event.content, parentId: event.parentId);
+
       final updatedReplies = Map<String, List<Comment>>.from(state.replies);
+      updatedReplies.putIfAbsent(event.parentId, () => []);
       updatedReplies[event.parentId]!.insert(0, comment);
-      emit(state.copyWith(loadReplyStatus: LoadStatus.done, userComment: comment, replies: updatedReplies));
+
+      final updatedComments = List<Comment>.from(state.comments);
+      final index = updatedComments.indexWhere((e) => e.id == event.parentId);
+      if (index != -1) {
+        updatedComments[index] = updatedComments[index].copyWith(replyCount: updatedComments[index].replyCount + 1);
+      }
+
+      updatedStatus[event.parentId] = LoadStatus.done;
+      emit(state.copyWith(replies: updatedReplies, comments: updatedComments, userComment: comment, replyLoadStatus: updatedStatus));
     } catch (e) {
-      emit(state.copyWith(loadReplyStatus: LoadStatus.error, errorMessage: e.toString()));
-      throw Exception(e);
+      updatedStatus[event.parentId] = LoadStatus.error;
+      emit(state.copyWith(replyLoadStatus: updatedStatus, errorMessage: e.toString()));
     }
   }
 
@@ -64,19 +73,20 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
   }
 
   Future<void> _getReplies(GetReplies event, Emitter<CommentState> emit) async {
-    emit(state.copyWith(loadReplyStatus: LoadStatus.loading));
+    final updatedStatus = Map<String, LoadStatus>.from(state.replyLoadStatus);
+    updatedStatus[event.commentId] = LoadStatus.loading;
+    emit(state.copyWith(replyLoadStatus: updatedStatus));
+
     try {
       final replies = await api.getReplies(commentId: event.commentId, limit: event.limit);
       final currentReplies = Map<String, List<Comment>>.from(state.replies);
-      if (currentReplies.keys.contains(event.commentId)) {
-        currentReplies[event.commentId]?.addAll(replies);
-      } else {
-        currentReplies[event.commentId] = replies;
-      }
-      emit(state.copyWith(loadReplyStatus: LoadStatus.done, replies: currentReplies));
+      currentReplies[event.commentId] = [...(currentReplies[event.commentId] ?? []), ...replies];
+
+      updatedStatus[event.commentId] = LoadStatus.done;
+      emit(state.copyWith(replies: currentReplies, replyLoadStatus: updatedStatus));
     } catch (e) {
-      emit(state.copyWith(loadReplyStatus: LoadStatus.error, errorMessage: e.toString()));
-      throw Exception(e);
+      updatedStatus[event.commentId] = LoadStatus.error;
+      emit(state.copyWith(replyLoadStatus: updatedStatus, errorMessage: e.toString()));
     }
   }
 
