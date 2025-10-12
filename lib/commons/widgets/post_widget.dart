@@ -14,6 +14,7 @@ import '../../models/post.dart';
 import '../../models/post_media.dart';
 import '../../screens/comments_screen/comment_screen.dart';
 import '../../utils/time_ago.dart';
+import '../../utils/user_avatar.dart';
 import 'display_video.dart';
 
 class PostWidget extends StatefulWidget {
@@ -79,11 +80,11 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
       TweenSequenceItem(tween: Tween(begin: 1.4, end: 0.95).chain(CurveTween(curve: Curves.easeIn)), weight: 40),
     ]).animate(_heartController);
 
-    _opacityAnim = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _heartController, curve: const Interval(0.6, 1.0, curve: Curves.easeOut)),
-    );
+    _opacityAnim = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _heartController, curve: const Interval(0.6, 1.0, curve: Curves.easeOut)));
   }
-
 
   @override
   void dispose() {
@@ -132,13 +133,47 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
   }
 
   Widget _buildMediaItem(BuildContext context, PostMedia media) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final w = constraints.maxWidth;
-      final h = w / (widget.post.aspectRatio == 0 ? 1 : widget.post.aspectRatio);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final h = w / (widget.post.aspectRatio == 0 ? 1 : widget.post.aspectRatio);
 
-      // nếu kiểu video
-      if (media.mediaType.startsWith('video')) {
-        // giả sử media.mediaUrl là URL (network). Nếu bạn có local File, chuyển sang SmartVideo(file: ...)
+        // nếu kiểu video
+        if (media.mediaType.startsWith('video')) {
+          // giả sử media.mediaUrl là URL (network). Nếu bạn có local File, chuyển sang SmartVideo(file: ...)
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onDoubleTapDown: (details) {
+              final renderBox = context.findRenderObject() as RenderBox;
+              final local = renderBox.globalToLocal(details.globalPosition);
+              _handleDoubleTap(local, renderBox.size);
+            },
+            child: SizedBox(
+              width: w,
+              height: h,
+              child: VisibilityDetector(
+                key: Key('video-${media.id}'),
+                onVisibilityChanged: (info) {
+                  final visible = info.visibleFraction; // 0.0 -> 1.0
+                  final fullyVisible = visible >= 0.95;
+                  if (fullyVisible) {
+                    // yêu cầu smartVideo init & play
+                    setState(() {
+                      _visibleVideoId = media.id; // theo id hoặc index
+                    });
+                  } else {
+                    if (_visibleVideoId == media.id) {
+                      setState(() => _visibleVideoId = null);
+                    }
+                  }
+                },
+                child: SmartVideo(url: media.mediaUrl, shouldPlay: _visibleVideoId == media.id, aspectRatio: widget.post.aspectRatio),
+              ),
+            ),
+          );
+        }
+
+        // image
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onDoubleTapDown: (details) {
@@ -149,52 +184,16 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
           child: SizedBox(
             width: w,
             height: h,
-            child: VisibilityDetector(
-              key: Key('video-${media.id}'),
-              onVisibilityChanged: (info) {
-                final visible = info.visibleFraction; // 0.0 -> 1.0
-                final fullyVisible = visible >= 0.95;
-                if (fullyVisible) {
-                  // yêu cầu smartVideo init & play
-                  setState(() {
-                    _visibleVideoId = media.id; // theo id hoặc index
-                  });
-                } else {
-                  if (_visibleVideoId == media.id) {
-                    setState(() => _visibleVideoId = null);
-                  }
-                }
-              },
-              child: SmartVideo(
-                url: media.mediaUrl,
-                shouldPlay: _visibleVideoId == media.id,
-                aspectRatio: widget.post.aspectRatio,
-              ),
-            )
+            child: CachedNetworkImage(
+              imageUrl: media.mediaUrl,
+              fit: BoxFit.cover,
+              placeholder: (ctx, url) => Container(color: Colors.grey[300]),
+              errorWidget: (ctx, url, error) => Container(color: Colors.grey, child: const Icon(Icons.error)),
+            ),
           ),
         );
-      }
-
-      // image
-      return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onDoubleTapDown: (details) {
-          final renderBox = context.findRenderObject() as RenderBox;
-          final local = renderBox.globalToLocal(details.globalPosition);
-          _handleDoubleTap(local, renderBox.size);
-        },
-        child: SizedBox(
-          width: w,
-          height: h,
-          child: CachedNetworkImage(
-            imageUrl: media.mediaUrl,
-            fit: BoxFit.cover,
-            placeholder: (ctx, url) => Container(color: Colors.grey[300]),
-            errorWidget: (ctx, url, error) => Container(color: Colors.grey, child: const Icon(Icons.error)),
-          ),
-        ),
-      );
-    });
+      },
+    );
   }
 
   Widget _buildIndicator(int itemCount) {
@@ -217,32 +216,13 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
               margin: const EdgeInsets.symmetric(horizontal: 3),
               width: isActive ? 12 : 8,
               height: 8,
-              decoration: BoxDecoration(
-                color: isActive ? Theme.of(context).colorScheme.primary : AppColors.subHeadlineDark,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: isActive ? Theme.of(context).colorScheme.primary : AppColors.subHeadlineDark, shape: BoxShape.circle),
             );
           }),
         );
       },
     );
   }
-
-  Widget avatarWidget(BuildContext context) {
-    final profile = context.read<MainCubit>().state.profile;
-    final avatarUrl = profile?.avatarUrl;
-    if (avatarUrl != null && avatarUrl.isNotEmpty) {
-      return ClipOval(
-        child: CachedNetworkImage(
-          imageUrl: avatarUrl,
-          width: 44, height: 44, fit: BoxFit.cover,
-          placeholder: (_, __) => Container(color: Colors.grey[300], width: 44, height: 44),
-        ),
-      );
-    }
-    return Container(width: 44, height: 44, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black));
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -258,10 +238,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Row(
             children: [
-              GestureDetector(
-                onTap: widget.onProfileTap,
-                child: avatarWidget(context),
-              ),
+              GestureDetector(onTap: widget.onProfileTap, child: userAvatar(context.read<MainCubit>().state.profile?.avatarUrl)),
               const SizedBox(width: 8),
               Expanded(
                 child: GestureDetector(
@@ -277,19 +254,32 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
                 ),
               ),
               IconButton(
-                onPressed: widget.onMore ?? () {
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (_) => SafeArea(child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ListTile(leading: const Icon(Icons.bookmark_border), title: const Text('Save'), onTap: widget.onSave != null ? () => widget.onSave!(widget.post) : null),
-                        ListTile(leading: const Icon(Icons.person_remove_alt_1_outlined), title: const Text('Unfollow'), onTap: () => {}),
-                        ListTile(leading: Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error), title: Text('Report', style: TextStyle(color: Theme.of(context).colorScheme.error)), onTap: () {}),
-                      ],
-                    ),),
-                  );
-                },
+                onPressed:
+                    widget.onMore ??
+                    () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder:
+                            (_) => SafeArea(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.bookmark_border),
+                                    title: const Text('Save'),
+                                    onTap: widget.onSave != null ? () => widget.onSave!(widget.post) : null,
+                                  ),
+                                  ListTile(leading: const Icon(Icons.person_remove_alt_1_outlined), title: const Text('Unfollow'), onTap: () => {}),
+                                  ListTile(
+                                    leading: Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error),
+                                    title: Text('Report', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                                    onTap: () {},
+                                  ),
+                                ],
+                              ),
+                            ),
+                      );
+                    },
                 icon: const Icon(Icons.more_vert),
               ),
             ],
@@ -320,11 +310,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
                         if (!_isLiked && widget.onLike != null) widget.onLike!(widget.post);
                         setState(() => _isLiked = true);
                       },
-                      child: Container(
-                        color: Colors.grey[300],
-                        alignment: Alignment.center,
-                        child: Text('No media', style: AppTextStyles.badge(context)),
-                      ),
+                      child: Container(color: Colors.grey[300], alignment: Alignment.center, child: Text('No media', style: AppTextStyles.badge(context))),
                     );
                   }
                   final mediaItem = media[index];
@@ -332,7 +318,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
                 },
               ),
 
-// trong Stack (media area):
+              // trong Stack (media area):
               if (_showHeart)
                 IgnorePointer(
                   ignoring: true,
@@ -345,12 +331,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
                           opacity: _opacityAnim.value,
                           child: Transform.scale(
                             scale: _scaleAnim.value,
-                            child: const Icon(
-                              Icons.favorite,
-                              size: 120,
-                              color: Colors.red,
-                              shadows: [Shadow(blurRadius: 12, color: Colors.black54)],
-                            ),
+                            child: const Icon(Icons.favorite, size: 120, color: Colors.red, shadows: [Shadow(blurRadius: 12, color: Colors.black54)]),
                           ),
                         ),
                       );
@@ -365,10 +346,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
                   right: 8,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withAlpha(178),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+                    decoration: BoxDecoration(color: Colors.black.withAlpha(178), borderRadius: BorderRadius.circular(14)),
                     child: Text('${_currentIndex.value + 1}/$mediaCount', style: AppTextStyles.badge(context).copyWith(color: Colors.white)),
                   ),
                 ),
@@ -379,8 +357,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
         const SizedBox(height: 8),
 
         // indicator
-        if (mediaCount > 1)
-          Center(child: _buildIndicator(mediaCount)),
+        if (mediaCount > 1) Center(child: _buildIndicator(mediaCount)),
 
         const SizedBox(height: 8),
 
@@ -398,18 +375,16 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                  child: _isLiked
-                      ? const Icon(Icons.favorite, key: ValueKey('liked'), color: Colors.red, size: 32)
-                      : const Icon(Icons.favorite_border, key: ValueKey('unliked'), size: 32),
+                  child:
+                      _isLiked
+                          ? const Icon(Icons.favorite, key: ValueKey('liked'), color: Colors.red, size: 32)
+                          : const Icon(Icons.favorite_border, key: ValueKey('unliked'), size: 32),
                 ),
               ),
               const SizedBox(width: 12),
 
               // Comment
-              GestureDetector(
-                onTap: () => showCommentsModal(context, onSend: (value){}),
-                child: const Icon(Icons.mode_comment_outlined, size: 32),
-              ),
+              GestureDetector(onTap: () => showCommentsModal(context, postId: widget.post.id), child: const Icon(Icons.mode_comment_outlined, size: 32)),
               const SizedBox(width: 12),
 
               // Share
@@ -425,7 +400,10 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                  child: _isSaved ? const Icon(Icons.bookmark, key: ValueKey('saved'), size: 28) : const Icon(Icons.bookmark_border, key: ValueKey('unsaved'), size: 28),
+                  child:
+                      _isSaved
+                          ? const Icon(Icons.bookmark, key: ValueKey('saved'), size: 28)
+                          : const Icon(Icons.bookmark_border, key: ValueKey('unsaved'), size: 28),
                 ),
               ),
             ],
@@ -445,10 +423,11 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
               if ((widget.post.caption ?? '').isNotEmpty)
                 ExpandableCaption(username: context.read<MainCubit>().state.profile!.username, caption: widget.post.caption ?? ''),
               const SizedBox(height: 6),
-              GestureDetector(
-                onTap: widget.onCommentTap,
-                child: Text('Xem tất cả ${widget.post.commentsCount} bình luận', style: AppTextStyles.hashtag(context)),
-              ),
+              if (widget.post.commentsCount > 0)
+                GestureDetector(
+                  onTap: () => showCommentsModal(context, postId: widget.post.id),
+                  child: Text('Xem tất cả ${widget.post.commentsCount} bình luận', style: AppTextStyles.hashtag(context)),
+                ),
             ],
           ),
         ),
@@ -459,7 +438,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
   }
 }
 
-void showCommentsModal(BuildContext context, {required ValueChanged<String> onSend}) {
+void showCommentsModal(BuildContext context, {required String postId}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -471,10 +450,7 @@ void showCommentsModal(BuildContext context, {required ValueChanged<String> onSe
         maxChildSize: 0.95,
         expand: false,
         builder: (context, scrollController) {
-          return CommentsModal(
-            scrollController: scrollController,
-            onSend: onSend,
-          );
+          return CommentsModal(scrollController: scrollController, postId: postId);
         },
       );
     },

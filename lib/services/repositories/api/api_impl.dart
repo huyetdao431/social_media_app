@@ -11,6 +11,7 @@ import 'package:social_media_app/services/repositories/log/log.dart';
 import 'package:social_media_app/utils/get_video_duration.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../models/comment.dart';
 import '../../../models/post_media.dart';
 import '../../../models/post.dart';
 import '../../../models/profile/profile.dart';
@@ -288,7 +289,7 @@ class ApiImpl implements Api {
 
   //</editor-fold>
 
-  //<editor-fold desc="upload post">
+  //<editor-fold desc="post's methods">
   @override
   Future<String> uploadFile({required String bucketName, required File file, required String userId, String? folder}) async {
     try {
@@ -406,13 +407,14 @@ class ApiImpl implements Api {
           .range(offset, offset + limit - 1);
 
       if (response.isEmpty) return [];
-      List<Post> results = response.map<Post>((map) {
-        final List<PostMedia> mediaList = (map['post_media'] as List<dynamic>).map((m) => PostMedia.fromMap(m as Map<String, dynamic>)).toList();
+      List<Post> results =
+          response.map<Post>((map) {
+            final List<PostMedia> mediaList = (map['post_media'] as List<dynamic>).map((m) => PostMedia.fromMap(m as Map<String, dynamic>)).toList();
 
-        return Post.fromMap({...map, 'media_list': mediaList});
-      }).toList();
+            return Post.fromMap({...map, 'media_list': mediaList});
+          }).toList();
       return results;
-    } catch(e) {
+    } catch (e) {
       throw Exception(e);
     }
   }
@@ -431,4 +433,118 @@ class ApiImpl implements Api {
 
   //</editor-fold>
 
+  //<editor-fold desc="comment's methods">
+
+  @override
+  Future<List<Comment>> getComments({required String postId, int limit = 20, int offset = 0}) async {
+    final res = await supabase
+        .from('comments')
+        .select('id, post_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)')
+        .eq('post_id', postId)
+        .isFilter('parent_id', null)
+        .order('created_at', ascending: false)
+        .limit(limit)
+        .range(offset, offset + limit - 1);
+
+    final data = res as List<dynamic>? ?? [];
+    return data.map((e) => Comment.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+  }
+
+  @override
+  Future<List<Comment>> getReplies({required String commentId, int limit = 5}) async {
+    final res = await supabase
+        .from('comments')
+        .select('id, post_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)')
+        .eq('parent_id', commentId)
+        .order('created_at', ascending: true)
+        .limit(limit);
+
+    final data = res as List<dynamic>? ?? [];
+    return data.map((e) => Comment.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+  }
+
+  @override
+  Future<Comment> createComment({required String postId, required String userId, required String content, String? parentId}) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    final insertMap = {
+      'post_id': postId,
+      'user_id': userId,
+      'parent_id': parentId,
+      'content': content,
+      'created_at': now,
+      'updated_at': null,
+      'reply_count': 0,
+      'like_count': 0,
+    };
+
+    final insertRes =
+        await supabase
+            .from('comments')
+            .insert(insertMap)
+            .select('id, post_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)')
+            .single();
+
+    final newComment = Comment.fromMap(Map<String, dynamic>.from(insertRes as Map));
+
+    if (parentId != null) {
+      try {
+        final parentSel = await supabase.from('comments').select('reply_count').eq('id', parentId).single();
+        if (parentSel['reply_count'] != null) {
+          final current = parentSel['reply_count'] is int ? parentSel['reply_count'] as int : int.tryParse('${parentSel['reply_count']}') ?? 0;
+          await supabase.from('comments').update({'reply_count': current + 1}).eq('id', parentId);
+        }
+      } catch (e) {
+        throw Exception(e);
+      }
+    }
+
+    return newComment;
+  }
+
+  @override
+  Future<Comment> updateComment({required String commentId, required String userId, required String newContent}) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+
+    final res =
+        await supabase
+            .from('comments')
+            .update({'content': newContent, 'updated_at': now})
+            .eq('id', commentId)
+            .select('id, post_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)')
+            .single();
+
+    return Comment.fromMap(Map<String, dynamic>.from(res as Map));
+  }
+
+  @override
+  Future<bool> deleteComment({required String commentId, required String userId}) async {
+    final sel = await supabase.from('comments').select('id, parent_id, user_id').eq('id', commentId).single();
+
+    if (sel['user_id'] != userId) {
+      throw Exception('Bạn không có quyền xóa comment này');
+    }
+
+    final parentId = sel['parent_id'] as String?;
+
+    await supabase.from('comments').delete().eq('id', commentId);
+
+    if (parentId != null) {
+      try {
+        final parentSel = await supabase.from('comments').select('reply_count').eq('id', parentId).single();
+
+        if (parentSel['reply_count'] != null) {
+          final current = parentSel['reply_count'] is int ? parentSel['reply_count'] as int : int.tryParse('${parentSel['reply_count']}') ?? 0;
+
+          final newCount = current > 0 ? current - 1 : 0;
+
+          await supabase.from('comments').update({'reply_count': newCount}).eq('id', parentId);
+        }
+      } catch (e) {
+        throw Exception(e);
+      }
+    }
+    return true;
+  }
+
+  //</editor-fold>
 }

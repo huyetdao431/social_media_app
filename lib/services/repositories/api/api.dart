@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../../../models/comment.dart';
 import '../../../models/profile/profile.dart';
 import '../../../models/post.dart';
 
@@ -54,6 +55,18 @@ abstract class Api {
 
   Future<List<Post>> getPostsByUser({required String userId, int limit = 12, int offset = 0});
 
+  //</editor-fold>
+
+  //<editor-fold desc="comment">
+  Future<List<Comment>> getComments({required String postId, int limit = 20, int offset = 0});
+
+  Future<List<Comment>> getReplies({required String commentId, int limit = 5});
+
+  Future<Comment> createComment({required String postId, required String userId, required String content, String? parentId});
+
+  Future<Comment> updateComment({required String commentId, required String userId, required String newContent});
+
+  Future<bool> deleteComment({required String commentId, required String userId});
   //</editor-fold>
 
 }

@@ -1,26 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:social_media_app/commons/enums/load_status.dart';
+import 'package:social_media_app/utils/loader/comment_skeleton_loader.dart';
+import 'package:social_media_app/utils/user_avatar.dart';
+
+import '../../cubit/comment_bloc/comment_bloc.dart';
+import '../../utils/time_ago.dart';
 
 class CommentTile extends StatefulWidget {
-  final String username;
-  final String caption;
-  final int likesCount;
+  final int index;
+  final String? parentId;
   final VoidCallback? onReply;
-  final VoidCallback? onAvatarTap;
   final int depth;
   final int maxDepth;
-  final String? time;
 
-  const CommentTile({
-    required this.username,
-    required this.caption,
-    this.likesCount = 0,
-    this.onReply,
-    this.onAvatarTap,
-    this.depth = 0,
-    this.maxDepth = 2,
-    this.time = '1h',
-    super.key,
-  });
+  const CommentTile({required this.index, this.parentId, this.onReply, this.depth = 0, this.maxDepth = 1, super.key});
 
   @override
   State<CommentTile> createState() => _CommentTileState();
@@ -30,125 +24,108 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
   bool isLiked = false;
   bool showReplies = false;
 
-  final int _replyCount = 2;
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    print('DEBUG: parentId: ${widget.parentId}');
+    return BlocBuilder<CommentBloc, CommentState>(
+      builder: (context, state) {
+        final theme = Theme.of(context);
+        var bloc = context.read<CommentBloc>();
+        final comment = widget.depth == 0 ? bloc.state.comments[widget.index] : bloc.state.replies[widget.parentId]![widget.index];
+        return Padding(
+          padding: EdgeInsets.only(left: widget.depth == 0 ? 0 : 40, top: 8, bottom: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Avatar
+              GestureDetector(
+                onTap: () {
+                  //todo: go to user profile screen
+                },
+                child: userAvatar(comment.userAvatarUrl!),
+              ),
+              const SizedBox(width: 10),
 
-    return Padding(
-      padding: EdgeInsets.only(left: widget.depth == 0 ? 0 : 40, top: 8, bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // avatar
-          GestureDetector(
-            onTap: widget.onAvatarTap,
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: theme.colorScheme.primary,
-              child: Text(widget.username.substring(0, 1).toUpperCase(), style: TextStyle(color: theme.colorScheme.onPrimary)),
-            ),
-          ),
-          const SizedBox(width: 10),
-          // content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // username + caption
-                Row(
+              // Nội dung comment
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        widget.username,
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (widget.time != null)
-                      Text(
-                        widget.time!,
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.textTheme.bodySmall?.color?.withAlpha(150)),
-                      ),
-                  ],
-                ),
-
-                const SizedBox(height: 6),
-
-                // hàng dưới: comment text (caption)
-                Text(
-                  widget.caption,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface),
-                ),
-
-                const SizedBox(height: 8),
-
-                // action row
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          isLiked = !isLiked;
-                        });
-                      },
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        transitionBuilder: (child, anim) {
-                          return ScaleTransition(scale: anim, child: child);
-                        },
-                        child:
-                            isLiked
-                                ? Icon(Icons.favorite, key: const ValueKey('liked'), color: Colors.red, size: 20)
-                                : const Icon(Icons.favorite_border, key: ValueKey('unliked'), size: 20),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text('${widget.likesCount}'),
-                    const SizedBox(width: 16),
-                    GestureDetector(onTap: widget.onReply, child: Text('Reply', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))),
-
-                    if (widget.depth < widget.maxDepth && _replyCount > 0)
-                      Row(
-                        children: [
-                          const SizedBox(width: 12),
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                showReplies = !showReplies;
-                              });
-                            },
-                            child: Text(showReplies ? 'Hide $_replyCount replies' : 'Show $_replyCount replies'),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            comment.userDisplayName ?? 'Người dùng',
+                            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
+                        ),
+                        const SizedBox(width: 8),
+                        Text(timeAgo(comment.createdAt), style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(comment.content, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              isLiked = !isLiked;
+                            });
+                          },
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                            child:
+                                isLiked
+                                    ? Icon(Icons.favorite, key: const ValueKey('liked'), color: Colors.red, size: 20)
+                                    : const Icon(Icons.favorite_border, key: ValueKey('unliked'), size: 20),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('${comment.likeCount + (isLiked ? 1 : 0)}'),
+                        const SizedBox(width: 16),
+                        GestureDetector(onTap: widget.onReply, child: Text('Reply', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))),
+                        if (widget.depth < widget.maxDepth && comment.replyCount > 0)
+                          Row(
+                            children: [
+                              const SizedBox(width: 12),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    showReplies = !showReplies;
+                                  });
+                                  bloc.add(GetReplies(commentId: comment.id));
+                                },
+                                child: Text(showReplies ? 'Hide ${comment.replyCount} replies' : 'Show ${comment.replyCount} replies'),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+
+                    if (showReplies && widget.depth < widget.maxDepth)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child:
+                            bloc.state.loadReplyStatus == LoadStatus.loading
+                                ? CommentTileSkeleton(depth: 1,)
+                                : Column(
+                                  children: [
+                                    for (var i = 0; i < bloc.state.replies[comment.id]!.length; i++)
+                                      CommentTile(index: i, parentId: comment.id, depth: widget.depth + 1, maxDepth: widget.maxDepth, onReply: widget.onReply),
+                                  ],
+                                ),
                       ),
                   ],
                 ),
-
-                Visibility(
-                  visible: showReplies && widget.depth < widget.maxDepth,
-                  maintainState: false,
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < _replyCount; i++)
-                        CommentTile(
-                          username: '${widget.username}_rep$i',
-                          caption: 'Reply #$i to ${widget.username}',
-                          likesCount: i,
-                          depth: widget.depth + 1,
-                          maxDepth: widget.maxDepth,
-                          onReply: () => widget.onReply?.call(),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
