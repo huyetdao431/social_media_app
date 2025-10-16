@@ -3,6 +3,7 @@ import 'dart:io';
 import '../../../models/comment.dart';
 import '../../../models/profile/profile.dart';
 import '../../../models/post.dart';
+import '../../../models/story.dart';
 
 abstract class Api {
   //<editor-fold desc="auth">
@@ -67,6 +68,22 @@ abstract class Api {
   Future<Comment> updateComment({required String commentId, required String userId, required String newContent});
 
   Future<bool> deleteComment({required String commentId, required String userId});
+
   //</editor-fold>
 
+  //<editor-fold desc="story's methods">
+  Future<Story> createStory({required File file, required DateTime expiresAt, String visibility = 'public'});
+
+  Future<Story?> getStory(String storyId, String currentUserId);
+
+  Future<List<Story>> getStoriesByUser({required String userId, int limit = 12, int offset = 0});
+
+  Future<List<Story>> getFeedStories({int limit = 50, int offset = 0});
+
+  Future<Story> updateStoryStatus({required String storyId, bool? isActive, String? visibility});
+
+  Future<bool> deleteStorySoft({required String storyId});
+
+  Future<void> addStoryView({required String storyId, required String viewerId, String? deviceInfo});
+  //</editor-fold>
 }

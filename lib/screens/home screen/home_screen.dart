@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:social_media_app/cubit/home_cubit/home_cubit.dart';
-import 'package:social_media_app/screens/add_story_screen/add_story_screen.dart';
-import 'package:social_media_app/screens/story_screen/story_screen.dart';
+import 'package:social_media_app/cubit/home_bloc/home_bloc.dart';
+import 'package:social_media_app/screens/home%20screen/story_list.dart';
+import 'package:social_media_app/services/repositories/api/api.dart';
 import 'package:social_media_app/utils/loader/post_skeleton_loader.dart';
-
-import '../../commons/widgets/post_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   static const String route = 'HomeScreen';
@@ -14,7 +12,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => HomeCubit(), child: Page());
+    return BlocProvider(create: (context) => HomeBloc(context.read<Api>()), child: Page());
   }
 }
 
@@ -28,8 +26,6 @@ class Page extends StatefulWidget {
 class _PageState extends State<Page> {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeState>(
-  builder: (context, state) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Home'),
@@ -47,118 +43,8 @@ class _PageState extends State<Page> {
         child: Column(
           children: [
             //dang tin
-            Story(),
+            StoryList(),
             PostWidgetSkeleton(),
-          ],
-        ),
-      ),
-    );
-  },
-);
-  }
-}
-
-class Story extends StatefulWidget {
-  const Story({super.key});
-
-  @override
-  State<Story> createState() => _StoryState();
-}
-
-class _StoryState extends State<Story> {
-  List<bool> isWatched = List<bool>.filled(5, false);
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 70,
-      width: MediaQuery.sizeOf(context).width,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pushNamed(AddStoryScreen.route);
-              },
-              child: Stack(
-                children: [
-                  CircleAvatar(radius: 32, backgroundImage: AssetImage('assets/images/avt_01.png'), backgroundColor: Colors.transparent),
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white, border: Border.all(width: 1.5, color: Colors.black)),
-                      child: const Icon(Icons.add, size: 20, color: Colors.black),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            ...List.generate(
-              5,
-              (i) => Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isWatched[i] = true;
-                      Navigator.of(context).pushNamed(StoryScreen.route);
-                    });
-                  },
-                  child: Stack(
-                    children: [
-                      SizedBox(
-                        width: 68,
-                        height: 68,
-                        child: Center(child: Container(width: 64, height: 64, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black))),
-                      ),
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.transparent,
-                            border: Border.all(width: 3, color: isWatched[i] ? Colors.grey : Colors.pink),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(right: 12),
-              child: Stack(
-                children: [
-                  SizedBox(
-                    width: 68,
-                    height: 68,
-                    child: Center(child: Container(height: 64, width: 64, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle))),
-                  ),
-                  SizedBox(
-                    width: 68,
-                    height: 68,
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.grey,
-                          borderRadius: BorderRadius.circular(12),
-                          // border: Border.all(
-                          //   width: 1,
-                          //   color: Colors.white,
-                          // ),
-                        ),
-                        child: Icon(Icons.person_add, size: 18),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),

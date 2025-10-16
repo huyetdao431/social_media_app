@@ -9,22 +9,27 @@ Future<void> showEmailConfirmationDialog(BuildContext context, {required String 
       return AlertDialog(
         title: const Text('Đăng ký thành công'),
         content: Text('Vui lòng kiểm tra hộp thư $email và làm theo hướng dẫn trong email để xác nhận tài khoản.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Đóng'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Đóng'))],
       );
     },
   );
 }
 
-Future<bool?> showNotificationDialog(
-    BuildContext context, {
-      required String message,
-      String title = 'Notification',
-    }) {
+Future<bool?> showNotificationDialog(BuildContext context, {required String message, String title = 'Notification'}) {
+  return showDialog<bool>(
+    context: context,
+    barrierDismissible: true, // tap outside to dismiss
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text('Ok'))],
+      );
+    },
+  );
+}
+
+Future<bool?> showConfirmationDialog(BuildContext context, {required String message, String title = 'Confirmation'}) {
   return showDialog<bool>(
     context: context,
     barrierDismissible: true, // tap outside to dismiss
@@ -33,16 +38,13 @@ Future<bool?> showNotificationDialog(
         title: Text(title),
         content: Text(message),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text('Ok'),
-          ),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text('Continue')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text('Cancel')),
         ],
       );
     },
   );
 }
-
 
 void showErrorDialog(BuildContext context, String errorMessage) {
   showDialog<void>(

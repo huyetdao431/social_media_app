@@ -2,12 +2,13 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:social_media_app/cubit/story_bloc/story_bloc.dart';
 import 'package:social_media_app/materials/app_colors.dart';
 
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_media_app/screens/add_story_screen/edit_story_screen.dart';
+import 'package:social_media_app/services/repositories/api/api.dart';
 
-import '../../cubit/story_cubit/story_cubit.dart';
 import '../../commons/widgets/camera_screen.dart';
 
 class AddStoryScreen extends StatelessWidget {
@@ -17,7 +18,7 @@ class AddStoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => StoryCubit(), child: Theme(data: ThemeData.dark(), child: const Page()));
+    return BlocProvider(create: (context) => StoryBloc(context.read<Api>()), child: Theme(data: ThemeData.dark(), child: const Page()));
   }
 }
 
@@ -182,87 +183,89 @@ class _GalleryWidgetState extends State<GalleryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<StoryCubit, StoryState>(
+    return BlocConsumer<StoryBloc, StoryState>(
+      listenWhen: (prev, curr) => prev.storyMedia != curr.storyMedia,
+      listener: (context, state) {
+        Navigator.of(context).pushNamed(EditStoryScreen.route, arguments: {'bloc': context.read<StoryBloc>()});
+      },
       builder: (context, state) {
-        var cubit = context.read<StoryCubit>();
+        var bloc = context.read<StoryBloc>();
         return _loading
             ? const Center(child: CircularProgressIndicator())
             : Column(
-              children: [
-                // Album picker
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [TextButton.icon(onPressed: _showAlbumPicker, icon: const Icon(Icons.keyboard_arrow_down), label: Text(_albumName))],
+          children: [
+            // Album picker
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [TextButton.icon(onPressed: _showAlbumPicker, icon: const Icon(Icons.keyboard_arrow_down), label: Text(_albumName))],
+            ),
+
+            // GridView media
+            Expanded(
+              child: GridView.builder(
+                controller: _scrollController,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 2,
+                  crossAxisSpacing: 2,
+                  childAspectRatio: 9 / 16, // tỉ lệ 9:16
                 ),
-
-                // GridView media
-                Expanded(
-                  child: GridView.builder(
-                    controller: _scrollController,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 2,
-                      crossAxisSpacing: 2,
-                      childAspectRatio: 9 / 16, // tỉ lệ 9:16
-                    ),
-                    itemCount: _mediaList.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        // cell đầu tiên mở Camera
-                        return GestureDetector(
-                          onTap: () async {
-                            final result = await Navigator.of(context).pushNamed(CameraScreen.route) as Map<String, dynamic>;
-                            final file = result['file'] as File;
-                            final mediaType = result['mediaType'] as String;
-                            if (context.mounted) {
-                              context.read<StoryCubit>().setMediaType(mediaType);
-                              context.read<StoryCubit>().getStoryMediaFromCamera(file);
-                              Navigator.of(context).pushNamed(EditStoryScreen.route, arguments: {'cubit': cubit});
-                            }
-                          },
-                          child: Container(color: Colors.black26, child: const Icon(Icons.camera_alt, size: 40)),
-                        );
+                itemCount: _mediaList.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    // cell đầu tiên mở Camera
+                    return GestureDetector(
+                      onTap: () async {
+                        final result = await Navigator.of(context).pushNamed(CameraScreen.route) as Map<String, dynamic>;
+                        final file = result['file'] as File;
+                        final mediaType = result['mediaType'] as String;
+                        if (context.mounted) {
+                          context.read<StoryBloc>().add(SetMediaTypeEvent(mediaType));
+                          context.read<StoryBloc>().add(GetStoryMediaFromCameraEvent(file));
+                          Navigator.of(context).pushNamed(EditStoryScreen.route, arguments: {'bloc': bloc});
+                        }
+                      },
+                      child: Container(color: Colors.black26, child: const Icon(Icons.camera_alt, size: 40)),
+                    );
+                  }
+                  final asset = _mediaList[index - 1];
+                  return FutureBuilder<Uint8List?>(
+                    future: _getThumb(asset),
+                    builder: (_, snapshot) {
+                      if (!snapshot.hasData) {
+                        return Container(color: Colors.grey[300]);
                       }
-                      final asset = _mediaList[index - 1];
-                      return FutureBuilder<Uint8List?>(
-                        future: _getThumb(asset),
-                        builder: (_, snapshot) {
-                          if (!snapshot.hasData) {
-                            return Container(color: Colors.grey[300]);
-                          }
-                          return Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              GestureDetector(
-                                onTap: () async {
-                                  cubit.setMediaType(asset.type == AssetType.image ? 'image' : 'video');
-                                  await cubit.loadData(asset);
-                                  if (!context.mounted) return;
-                                  Navigator.of(context).pushNamed(EditStoryScreen.route, arguments: {'cubit': cubit});
-                                },
-                                child: Image.memory(snapshot.data!, fit: BoxFit.cover),
-                              ),
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              bloc.add(SetMediaTypeEvent(asset.type == AssetType.image ? 'image' : 'video'));
+                              bloc.add(LoadDataEvent(asset));
+                            },
+                            child: Image.memory(snapshot.data!, fit: BoxFit.cover),
+                          ),
 
-                              // overlay icon + thời lượng cho video
-                              if (asset.type == AssetType.video)
-                                Positioned(
-                                  bottom: 4,
-                                  right: 4,
-                                  left: 4,
-                                  child: Text(
-                                    _formatDuration(asset.videoDuration),
-                                    style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
+                          // overlay icon + thời lượng cho video
+                          if (asset.type == AssetType.video)
+                            Positioned(
+                              bottom: 4,
+                              right: 4,
+                              left: 4,
+                              child: Text(
+                                _formatDuration(asset.videoDuration),
+                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                        ],
                       );
                     },
-                  ),
-                ),
-              ],
-            );
+                  );
+                },
+              ),
+            ),
+          ],
+        );
       },
     );
   }

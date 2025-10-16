@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:social_media_app/commons/widgets/video_trimmer_screen.dart';
 import 'package:social_media_app/cubit/post_cubit/post_cubit.dart';
 import 'package:social_media_app/cubit/reel_cubit/reel_cubit.dart';
-import 'package:social_media_app/cubit/story_cubit/story_cubit.dart';
+import 'package:social_media_app/cubit/story_bloc/story_bloc.dart';
 import 'package:social_media_app/screens/account_screen/account_screen.dart';
 import 'package:social_media_app/screens/account_screen/account_setting_screen.dart';
 import 'package:social_media_app/screens/account_screen/edit_profile_screen.dart';
@@ -30,6 +30,7 @@ import 'package:social_media_app/screens/splash_screen/splash_screen.dart';
 import 'package:social_media_app/screens/story_screen/story_screen.dart';
 
 import 'cubit/profile_cubit/profile_cubit.dart';
+import 'models/story.dart';
 
 Route<dynamic>? mainRoute(RouteSettings settings) {
   switch (settings.name) {
@@ -43,7 +44,7 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as ProfileCubit;
       return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: EditProfileScreen()));
     case AccountSettingScreen.route:
-      return _slideRightRoute(AccountSettingScreen());
+      return _slideInFromRight(AccountSettingScreen());
     case MainScreen.route:
       return MaterialPageRoute(builder: (context) => MainScreen());
     case HomeScreen.route:
@@ -51,19 +52,21 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case SearchScreen.route:
       return MaterialPageRoute(builder: (context) => SearchScreen());
     case CreateMediaScreen.route:
-      // return _pushCurrentPageRight(CreateMediaScreen());
-      return MaterialPageRoute(builder: (context) => CreateMediaScreen());
+      return _slideInFromBottom(CreateMediaScreen());
+      // return MaterialPageRoute(builder: (context) => CreateMediaScreen());
     case AddPostScreen.route:
-      return _pushCurrentPageRight(AddPostScreen());
+      return _slideInFromLeft(AddPostScreen());
     case AddStoryScreen.route:
-      return _pushCurrentPageRight(AddStoryScreen());
+      return _slideInFromLeft(AddStoryScreen());
+      // return MaterialPageRoute(builder: (context) => AddStoryScreen());
     case AddReelScreen.route:
-      return _pushCurrentPageRight(AddReelScreen());
+      return _slideInFromLeft(AddReelScreen());
+      // return MaterialPageRoute(builder: (context) => AddReelScreen());
     case CameraScreen.route:
-      return _pushCurrentPageRight(CameraScreen());
+      return _slideInFromLeft(CameraScreen());
     case VideoTrimScreen.route:
       var file = (settings.arguments as Map<String, dynamic>)['file'] as File;
-      return _pushCurrentPageRight(VideoTrimScreen(file: file));
+      return _slideInFromLeft(VideoTrimScreen(file: file));
     case EditImageScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as PostCubit;
       return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: EditImageScreen()));
@@ -80,13 +83,16 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as ProfileCubit;
       return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: PostListScreen()));
     case EditStoryScreen.route:
-      var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as StoryCubit;
-      return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: EditStoryScreen()));
+      var bloc = (settings.arguments as Map<String, dynamic>)['bloc'] as StoryBloc;
+      return MaterialPageRoute(builder: (context) => BlocProvider.value(value: bloc, child: EditStoryScreen()));
     case EditReelScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as ReelCubit;
       return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: EditReelScreen()));
     case StoryScreen.route:
-      return MaterialPageRoute(builder: (context) => StoryScreen());
+      var stories = (settings.arguments as Map<String, dynamic>)['stories'] as Map<String, List<Story>>;
+      var startUserId = (settings.arguments as Map<String, dynamic>)['startUserId'] as String;
+      var startStoryIndex = (settings.arguments as Map<String, dynamic>)['startStoryIndex'] as int;
+      return MaterialPageRoute(builder: (context) => StoryScreen(stories: stories, startUserId: startUserId, startStoryIndex: startStoryIndex,));
     case ReelsScreen.route:
       return MaterialPageRoute(builder: (context) => ReelsScreen());
     default:
@@ -94,30 +100,63 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
   }
 }
 
-PageRouteBuilder _slideRightRoute(Widget page) {
+PageRouteBuilder _slideInFromLeft(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      // Animation cho trang mới: trượt từ trái vào giữa
+      const begin = Offset(-1.0, 0.0);
+      const end = Offset.zero;
+      final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
+      final offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
+}
+
+PageRouteBuilder _slideInFromRight(Widget page) {
   return PageRouteBuilder(
     pageBuilder: (context, animation, secondaryAnimation) => page,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       const begin = Offset(1.0, 0.0);
       const end = Offset.zero;
-      const curve = Curves.easeInOut;
+      final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
+      final offsetAnimation = animation.drive(tween);
 
-      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      const beginSecondary = Offset.zero;
+      const endSecondary = Offset(-0.3, 0.0);
+      final secondaryTween = Tween(begin: beginSecondary, end: endSecondary).chain(CurveTween(curve: Curves.easeInOut));
+      final secondaryOffsetAnimation = secondaryAnimation.drive(secondaryTween);
 
-      return SlideTransition(position: animation.drive(tween), child: child);
+      return SlideTransition(
+        position: offsetAnimation,
+        child: SlideTransition(
+          position: secondaryOffsetAnimation,
+          child: child,
+        ),
+      );
     },
   );
 }
 
-PageRouteBuilder _pushCurrentPageRight(Widget page) {
+PageRouteBuilder _slideInFromBottom(Widget page) {
   return PageRouteBuilder(
     pageBuilder: (context, animation, secondaryAnimation) => page,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      const curve = Curves.easeInOut;
+      // Animation cho trang mới: trượt từ dưới lên giữa
+      const begin = Offset(0.0, 1.0);
+      const end = Offset.zero;
+      final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
+      final offsetAnimation = animation.drive(tween);
 
-      var tween = Tween<Offset>(begin: const Offset(-1.0, 0.0), end: Offset.zero).chain(CurveTween(curve: curve));
-
-      return Stack(children: [SlideTransition(position: animation.drive(tween), child: page)]);
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
     },
   );
 }

@@ -15,6 +15,7 @@ import '../../../models/comment.dart';
 import '../../../models/post_media.dart';
 import '../../../models/post.dart';
 import '../../../models/profile/profile.dart';
+import '../../../models/story.dart';
 import '../../../utils/map_login_errors.dart';
 
 class ApiImpl implements Api {
@@ -544,6 +545,160 @@ class ApiImpl implements Api {
       }
     }
     return true;
+  }
+
+  //</editor-fold>
+
+  //<editor-fold desc="story's methods">
+
+  @override
+  Future<Story> createStory({required File file, required DateTime expiresAt, String visibility = 'public'}) async {
+    try {
+      final String userId = supabase.auth.currentUser!.id;
+      final publicUrl = await uploadFile(bucketName: 'stories', file: file, userId: userId, folder: 'stories');
+
+      final mimeType = lookupMimeType(file.path);
+      final isVideo = mimeType != null && mimeType.startsWith('video');
+      final int duration = isVideo ? await getVideoDuration(file.path) : 10;
+      final thumbUrl = isVideo ? await generateVideoThumb('stories', file, userId) : null;
+
+      final insertBody = {
+        'user_id': userId,
+        'media_url': publicUrl,
+        'media_type': isVideo ? 'video' : 'image',
+        'expires_at': expiresAt.toUtc().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'mime_type': mimeType,
+        'duration': duration,
+        'thumb_url': thumbUrl,
+        'visibility': visibility,
+        'is_active': true,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+        'view_count': 0,
+      };
+
+      final res = await supabase.from('stories').insert(insertBody).select();
+      final createdMap = (res as List).first as Map<String, dynamic>;
+      return Story.fromMap(createdMap);
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase error when creating story: ${e.message}');
+    } catch (e) {
+      throw Exception('Create story failed: $e');
+    }
+  }
+
+  @override
+  Future<Story?> getStory(String storyId, String currentUserId) async {
+    try {
+      final res =
+          await supabase
+              .from('stories')
+              .select('*, profiles(username, avatar_url), story_views!left(viewer_id)')
+              .eq('id', storyId)
+              .eq('story_views.viewer_id', currentUserId)
+              .maybeSingle();
+
+      if (res == null) return null;
+      return Story.fromMap(Map<String, dynamic>.from(res as Map));
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase error when getting story: ${e.message}');
+    } catch (e) {
+      throw Exception('Get story failed: $e');
+    }
+  }
+
+  @override
+  Future<List<Story>> getStoriesByUser({required String userId, int limit = 12, int offset = 0}) async {
+    try {
+      final now = DateTime.now().toUtc().toIso8601String();
+      final currentUserId = supabase.auth.currentUser!.id;
+
+      final res = await supabase
+          .from('stories')
+          .select('*, profiles(username, avatar_url), story_views!left(viewer_id)')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .neq('visibility', 'disabled')
+          .gt('expires_at', now)
+          .eq('story_views.viewer_id', currentUserId)
+          .order('created_at', ascending: true)
+          .range(offset, offset + limit - 1);
+
+      final List rows = res as List;
+      return rows.map((r) => Story.fromMap(Map<String, dynamic>.from(r as Map))).toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase error when listing stories by user: ${e.message}');
+    } catch (e) {
+      throw Exception('Get stories by user failed: $e');
+    }
+  }
+
+  @override
+  Future<List<Story>> getFeedStories({int limit = 50, int offset = 0}) async {
+    try {
+      final currentUserId = supabase.auth.currentUser!.id;
+      final res = await supabase.rpc('get_feed_stories', params: {'p_viewer': currentUserId, 'p_limit': limit, 'p_offset': offset});
+
+      final List rows = (res == null) ? [] : (res as List);
+      return rows.map((r) {
+        final Map<String, dynamic> m = Map<String, dynamic>.from(r as Map);
+        return Story.fromMap(m);
+      }).toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase RPC error: ${e.message}');
+    } catch (e) {
+      throw Exception('getFeedStoriesRpc failed: $e');
+    }
+  }
+
+  @override
+  Future<Story> updateStoryStatus({required String storyId, bool? isActive, String? visibility}) async {
+    try {
+      final patch = {'is_active': isActive ?? true, 'visibility': visibility ?? 'public', 'updated_at': DateTime.now().toUtc().toIso8601String()};
+
+      final res = await supabase.from('stories').update(patch).eq('id', storyId).select();
+      final List rows = res as List;
+      if (rows.isEmpty) {
+        throw Exception('No story updated (id not found or permission denied)');
+      }
+      final updatedMap = Map<String, dynamic>.from(rows.first as Map);
+      return Story.fromMap(updatedMap);
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase error when updating story: ${e.message}');
+    } catch (e) {
+      throw Exception('Update story failed: $e');
+    }
+  }
+
+  @override
+  Future<bool> deleteStorySoft({required String storyId}) async {
+    try {
+      final patch = {'visibility': 'disabled', 'is_active': false, 'updated_at': DateTime.now().toUtc().toIso8601String()};
+
+      final res = await supabase.from('stories').update(patch).eq('id', storyId).select();
+      final List rows = res as List;
+      return rows.isNotEmpty;
+    } on PostgrestException {
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> addStoryView({required String storyId, required String viewerId, String? deviceInfo}) async {
+    try {
+      await supabase.from('story_views').insert({
+        'story_id': storyId,
+        'viewer_id': viewerId,
+        'device_info': deviceInfo ?? '',
+        'viewed_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase error when inserting story view: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to insert story view: $e');
+    }
   }
 
   //</editor-fold>

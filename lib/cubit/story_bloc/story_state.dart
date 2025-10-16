@@ -1,14 +1,18 @@
-part of 'story_cubit.dart';
+part of 'story_bloc.dart';
 
 class StoryState {
   final File? storyMedia;
   final String mediaType;
   final LoadStatus loadStatus;
+  final String errorMessage;
+  final Story? currentStory;
 
   const StoryState.init({
     this.storyMedia,
     this.mediaType = '',
     this.loadStatus = LoadStatus.init,
+    this.errorMessage = '',
+    this.currentStory,
   });
 
 //<editor-fold desc="Data Methods">
@@ -18,6 +22,8 @@ class StoryState {
     this.storyMedia,
     required this.mediaType,
     required this.loadStatus,
+    required this.errorMessage,
+    this.currentStory,
   });
 
 
@@ -28,7 +34,9 @@ class StoryState {
               runtimeType == other.runtimeType &&
               storyMedia == other.storyMedia &&
               mediaType == other.mediaType &&
-              loadStatus == other.loadStatus
+              loadStatus == other.loadStatus &&
+              errorMessage == other.errorMessage &&
+              currentStory == other.currentStory
           );
 
 
@@ -36,7 +44,9 @@ class StoryState {
   int get hashCode =>
       storyMedia.hashCode ^
       mediaType.hashCode ^
-      loadStatus.hashCode;
+      loadStatus.hashCode ^
+      errorMessage.hashCode ^
+      currentStory.hashCode;
 
 
   @override
@@ -45,6 +55,8 @@ class StoryState {
         ' storyMedia: $storyMedia,' +
         ' mediaType: $mediaType,' +
         ' loadStatus: $loadStatus,' +
+        ' errorMessage: $errorMessage,' +
+        ' currentStory: $currentStory,' +
         '}';
   }
 
@@ -53,11 +65,15 @@ class StoryState {
     File? storyMedia,
     String? mediaType,
     LoadStatus? loadStatus,
+    String? errorMessage,
+    Story? currentStory,
   }) {
     return StoryState(
       storyMedia: storyMedia ?? this.storyMedia,
       mediaType: mediaType ?? this.mediaType,
       loadStatus: loadStatus ?? this.loadStatus,
+      errorMessage: errorMessage ?? this.errorMessage,
+      currentStory: currentStory ?? this.currentStory,
     );
   }
 
@@ -67,6 +83,8 @@ class StoryState {
       'storyMedia': this.storyMedia,
       'mediaType': this.mediaType,
       'loadStatus': this.loadStatus,
+      'errorMessage': this.errorMessage,
+      'currentStory': this.currentStory,
     };
   }
 
@@ -75,6 +93,8 @@ class StoryState {
       storyMedia: map['storyMedia'] as File,
       mediaType: map['mediaType'] as String,
       loadStatus: map['loadStatus'] as LoadStatus,
+      errorMessage: map['errorMessage'] as String,
+      currentStory: map['currentStory'] as Story,
     );
   }
 
