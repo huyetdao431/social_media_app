@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pro_image_editor/designs/whatsapp/whatsapp.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:pro_video_editor/pro_video_editor.dart';
+import 'package:social_media_app/screens/add_reel_screen/example.dart';
+import 'package:social_media_app/screens/add_reel_screen/video_frosted_glass_xample.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../commons/widgets/stickers_gridview.dart';
@@ -273,7 +275,9 @@ class _EditPageState extends State<EditPage> {
                               children: [
                                 Expanded(
                                   child: GestureDetector(
-                                    onTap: () => editor.doneEditing(),
+                                    onTap: () {
+                                      Navigator.of(context).pushNamed(VideoFrostedGlassExample.route, arguments: {'fileVideo' : cubit.state.reelMedia});
+                                    },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 8),
                                       margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -284,7 +288,10 @@ class _EditPageState extends State<EditPage> {
                                 ),
                                 Expanded(
                                   child: GestureDetector(
-                                    onTap: () => editor.doneEditing(),
+                                    // onTap: () => editor.doneEditing(),
+                                    onTap: () {
+                                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => FrostedGlassExample(url: 'https://tse2.mm.bing.net/th/id/OIP.0Zf6L1dqv59Rc0YJMmjGtgHaEK?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3')));
+                                    },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 8),
                                       margin: const EdgeInsets.symmetric(horizontal: 12),

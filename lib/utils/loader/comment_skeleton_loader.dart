@@ -19,15 +19,10 @@ class CommentTileSkeleton extends StatelessWidget {
     this.avatarRadius = 18,
   });
 
-  EdgeInsets _paddingForDepth() {
-    if (depth == 0) return EdgeInsets.zero;
-    return EdgeInsets.only(left: 40.0 * depth); // giống CommentTile: offset 40 mỗi cấp
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: _paddingForDepth().add(const EdgeInsets.only(top: 8, bottom: 8)),
+      padding: const EdgeInsets.only(top: 8, bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -12,14 +12,15 @@ import 'comment_tile.dart';
 
 class CommentsModal extends StatelessWidget {
   final ScrollController scrollController;
-  final String postId;
+  final String targetId;
+  final String targetType;
 
-  const CommentsModal({required this.scrollController, super.key, required this.postId});
+  const CommentsModal({required this.scrollController, super.key, required this.targetType, required this.targetId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => CommentBloc(context.read<Api>())..add(GetComments(postId: postId)),
+      create: (context) => CommentBloc(context.read<Api>())..add(GetComments(targetType: 'post', targetId: targetId)),
       child: CommentPage(scrollController: scrollController),
     );
   }
@@ -76,9 +77,9 @@ class _CommentPageState extends State<CommentPage> {
     if (text.isEmpty) return;
     var bloc = context.read<CommentBloc>();
     if(isReply) {
-      bloc.add(CreateReply(postId: bloc.state.postId, userId: context.read<MainCubit>().state.profile!.id, content: text, parentId: parentId));
+      bloc.add(CreateReply(targetType: 'post',targetId: bloc.state.postId, userId: context.read<MainCubit>().state.profile!.id, content: text, parentId: parentId));
     } else {
-      bloc.add(CreateComment(postId: bloc.state.postId, userId: context.read<MainCubit>().state.profile!.id, content: text));
+      bloc.add(CreateComment(targetType: 'post',targetId: bloc.state.postId, userId: context.read<MainCubit>().state.profile!.id, content: text));
     }
     _controller.clear();
     _focusNode.requestFocus();

@@ -3,25 +3,28 @@ part of 'comment_bloc.dart';
 abstract class CommentEvent {}
 
 class CreateComment extends CommentEvent {
-  final String postId;
-  final String userId; 
+  final String targetType;
+  final String targetId;
+  final String userId;
   final String content; 
-  CreateComment({required this.postId, required this.userId, required this.content});
+  CreateComment({required this.targetType, required this.targetId, required this.userId, required this.content});
 }
 
 class CreateReply extends CommentEvent {
-  final String postId;
+  final String targetType;
+  final String targetId;
   final String userId;
   final String content;
   final String parentId;
-  CreateReply({required this.postId, required this.userId, required this.content, required this.parentId});
+  CreateReply({required this.targetType, required this.targetId, required this.userId, required this.content, required this.parentId});
 }
 
 class GetComments extends CommentEvent {
-  final String postId;
+  final String targetType;
+  final String targetId;
   final int limit;
   final int offset;
-  GetComments({required this.postId, this.limit = 20, this.offset = 0});
+  GetComments({required this.targetType, required this.targetId, this.limit = 20, this.offset = 0});
 }
 
 class GetReplies extends CommentEvent {

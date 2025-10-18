@@ -23,8 +23,7 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
   Future<void> _createComment(CreateComment event, Emitter<CommentState> emit) async {
     emit(state.copyWith(loadCommentStatus: LoadStatus.loading));
     try {
-      print('DEBUG: postId=${event.postId}, userId=${event.userId}');
-      final comment = await api.createComment(postId: event.postId, userId: event.userId, content: event.content);
+      final comment = await api.createComment(targetType: event.targetType, targetId: event.targetId, userId: event.userId, content: event.content);
       final updatedComment = List<Comment>.from(state.comments);
       updatedComment.insert(0, comment);
       emit(state.copyWith(loadCommentStatus: LoadStatus.done, userComment: comment, comments: updatedComment));
@@ -40,7 +39,7 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
     emit(state.copyWith(replyLoadStatus: updatedStatus));
 
     try {
-      final comment = await api.createComment(postId: event.postId, userId: event.userId, content: event.content, parentId: event.parentId);
+      final comment = await api.createComment(targetType: event.targetType, targetId: event.targetId, userId: event.userId, content: event.content, parentId: event.parentId);
 
       final updatedReplies = Map<String, List<Comment>>.from(state.replies);
       updatedReplies.putIfAbsent(event.parentId, () => []);
@@ -63,9 +62,8 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
   Future<void> _getComments(GetComments event, Emitter<CommentState> emit) async {
     emit(state.copyWith(loadStatus: LoadStatus.loading));
     try {
-      print('init postId: ${event.postId}');
-      final comments = await api.getComments(postId: event.postId, limit: event.limit, offset: event.offset);
-      emit(state.copyWith(loadStatus: LoadStatus.done, comments: comments, postId: event.postId));
+      final comments = await api.getComments(targetType: event.targetType,targetId: event.targetId, limit: event.limit, offset: event.offset);
+      emit(state.copyWith(loadStatus: LoadStatus.done, comments: comments, postId: event.targetId));
     } catch (e) {
       emit(state.copyWith(loadStatus: LoadStatus.error, errorMessage: e.toString()));
       throw Exception(e);

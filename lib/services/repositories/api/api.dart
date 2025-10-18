@@ -3,6 +3,7 @@ import 'dart:io';
 import '../../../models/comment.dart';
 import '../../../models/profile/profile.dart';
 import '../../../models/post.dart';
+import '../../../models/reel.dart';
 import '../../../models/story.dart';
 
 abstract class Api {
@@ -59,11 +60,11 @@ abstract class Api {
   //</editor-fold>
 
   //<editor-fold desc="comment">
-  Future<List<Comment>> getComments({required String postId, int limit = 20, int offset = 0});
+  Future<List<Comment>> getComments({required String targetType, required String targetId, int limit = 20, int offset = 0});
 
   Future<List<Comment>> getReplies({required String commentId, int limit = 5});
 
-  Future<Comment> createComment({required String postId, required String userId, required String content, String? parentId});
+  Future<Comment> createComment({required String targetType, required String targetId, required String userId, required String content, String? parentId});
 
   Future<Comment> updateComment({required String commentId, required String userId, required String newContent});
 
@@ -85,5 +86,20 @@ abstract class Api {
   Future<bool> deleteStorySoft({required String storyId});
 
   Future<void> addStoryView({required String storyId, required String viewerId, String? deviceInfo});
+
+  //</editor-fold>
+
+  //<editor-fold desc="reel's methods">
+  Future<Reel> createReel({required File file, String caption = '', bool isPublic = true});
+
+  Future<Reel?> getReel(String reelId, {String? currentUserId});
+
+  Future<List<Reel>> getReelsByUser({required String userId, int limit = 12, int offset = 0});
+
+  Future<List<Reel>> getFeedReels({int limit = 12, int offset = 0});
+
+  Future<Reel> updateReelStatus({required String reelId, bool? isPublic});
+
+  Future<bool> deleteReelSoft({required String reelId});
   //</editor-fold>
 }

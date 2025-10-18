@@ -1,0 +1,23 @@
+part of 'reel_bloc.dart';
+
+abstract class ReelEvent {}
+
+class CreateReelEvent extends ReelEvent {
+  final File file;
+  final String? content;
+  final bool? isPublic;
+  CreateReelEvent({required this.file, this.content, this.isPublic});
+}
+
+class GetReelsByUserEvent extends ReelEvent {
+  final String userId;
+  final int? limit;
+  final int? offset;
+  GetReelsByUserEvent({required this.userId, this.limit, this.offset});
+}
+
+class GetFeedReelsEvent extends ReelEvent {
+  final int? limit;
+  final int? offset;
+  GetFeedReelsEvent({this.limit, this.offset});
+}

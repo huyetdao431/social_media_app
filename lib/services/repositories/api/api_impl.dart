@@ -15,6 +15,7 @@ import '../../../models/comment.dart';
 import '../../../models/post_media.dart';
 import '../../../models/post.dart';
 import '../../../models/profile/profile.dart';
+import '../../../models/reel.dart';
 import '../../../models/story.dart';
 import '../../../utils/map_login_errors.dart';
 
@@ -437,14 +438,16 @@ class ApiImpl implements Api {
   //<editor-fold desc="comment's methods">
 
   @override
-  Future<List<Comment>> getComments({required String postId, int limit = 20, int offset = 0}) async {
+  Future<List<Comment>> getComments({required String targetType, required String targetId, int limit = 20, int offset = 0}) async {
     final res = await supabase
         .from('comments')
-        .select('id, post_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)')
-        .eq('post_id', postId)
+        .select(
+          'id, target_type, target_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)',
+        )
+        .eq('target_type', targetType)
+        .eq('target_id', targetId)
         .isFilter('parent_id', null)
         .order('created_at', ascending: false)
-        .limit(limit)
         .range(offset, offset + limit - 1);
 
     final data = res as List<dynamic>? ?? [];
@@ -455,7 +458,9 @@ class ApiImpl implements Api {
   Future<List<Comment>> getReplies({required String commentId, int limit = 5}) async {
     final res = await supabase
         .from('comments')
-        .select('id, post_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)')
+        .select(
+          'id, target_type, target_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)',
+        )
         .eq('parent_id', commentId)
         .order('created_at', ascending: true)
         .limit(limit);
@@ -465,10 +470,18 @@ class ApiImpl implements Api {
   }
 
   @override
-  Future<Comment> createComment({required String postId, required String userId, required String content, String? parentId}) async {
+  Future<Comment> createComment({
+    required String targetType,
+    required String targetId,
+    required String userId,
+    required String content,
+    String? parentId,
+  }) async {
     final now = DateTime.now().toUtc().toIso8601String();
+
     final insertMap = {
-      'post_id': postId,
+      'target_type': targetType,
+      'target_id': targetId,
       'user_id': userId,
       'parent_id': parentId,
       'content': content,
@@ -482,16 +495,21 @@ class ApiImpl implements Api {
         await supabase
             .from('comments')
             .insert(insertMap)
-            .select('id, post_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)')
+            .select(
+              'id, target_type, target_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)',
+            )
             .single();
 
     final newComment = Comment.fromMap(Map<String, dynamic>.from(insertRes as Map));
 
+    // Nếu là reply -> tăng reply_count cho comment cha
     if (parentId != null) {
       try {
         final parentSel = await supabase.from('comments').select('reply_count').eq('id', parentId).single();
+
         if (parentSel['reply_count'] != null) {
           final current = parentSel['reply_count'] is int ? parentSel['reply_count'] as int : int.tryParse('${parentSel['reply_count']}') ?? 0;
+
           await supabase.from('comments').update({'reply_count': current + 1}).eq('id', parentId);
         }
       } catch (e) {
@@ -511,7 +529,10 @@ class ApiImpl implements Api {
             .from('comments')
             .update({'content': newContent, 'updated_at': now})
             .eq('id', commentId)
-            .select('id, post_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)')
+            .eq('user_id', userId)
+            .select(
+              'id, target_type, target_id, user_id, parent_id, content, created_at, updated_at, reply_count, like_count, profiles(id, display_name, avatar_url)',
+            )
             .single();
 
     return Comment.fromMap(Map<String, dynamic>.from(res as Map));
@@ -698,6 +719,128 @@ class ApiImpl implements Api {
       throw Exception('Supabase error when inserting story view: ${e.message}');
     } catch (e) {
       throw Exception('Failed to insert story view: $e');
+    }
+  }
+
+  //</editor-fold>
+
+  //<editor-fold  desc="reel's methods">
+
+  @override
+  Future<Reel> createReel({required File file, String caption = '', bool isPublic = true}) async {
+    try {
+      final String userId = supabase.auth.currentUser!.id;
+      final publicUrl = await uploadFile(bucketName: 'reels', file: file, userId: userId, folder: 'reels');
+
+      final mimeType = lookupMimeType(file.path);
+      final int duration = await getVideoDuration(file.path);
+      final poster = await generateVideoThumb('reels', file, userId);
+
+      final insertBody = {
+        'user_id': userId,
+        'media_url': publicUrl,
+        'poster_url': poster,
+        'caption': caption,
+        'is_public': isPublic,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+        'mime_type': mimeType,
+        'duration': duration,
+        'view_count': 0,
+        'like_count': 0,
+        'comment_count': 0,
+      };
+
+      final res = await supabase.from('reels').insert(insertBody).select();
+      final createdMap = (res as List).first as Map<String, dynamic>;
+      return Reel.fromMap(Map<String, dynamic>.from(createdMap));
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase error when creating reel: ${e.message}');
+    } catch (e) {
+      throw Exception('Create reel failed: $e');
+    }
+  }
+
+  @override
+  Future<Reel?> getReel(String reelId, {String? currentUserId}) async {
+    try {
+      final res = await supabase.from('reels').select('*, profiles(username, avatar_url)').eq('id', reelId).maybeSingle();
+
+      if (res == null) return null;
+      return Reel.fromMap(Map<String, dynamic>.from(res as Map));
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase error when getting reel: ${e.message}');
+    } catch (e) {
+      throw Exception('Get reel failed: $e');
+    }
+  }
+
+  @override
+  Future<List<Reel>> getReelsByUser({required String userId, int limit = 12, int offset = 0}) async {
+    try {
+      final query = supabase
+          .from('reels')
+          .select('*, profiles(username, avatar_url)')
+          .eq('user_id', userId)
+          .eq('is_public', true)
+          .order('created_at', ascending: false);
+      final res = await query.range(offset, offset + limit - 1);
+
+      final List rows = res as List;
+      return rows.map((r) => Reel.fromMap(Map<String, dynamic>.from(r as Map))).toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase error when listing reels by user: ${e.message}');
+    } catch (e) {
+      throw Exception('Get reels by user failed: $e');
+    }
+  }
+
+  @override
+  Future<List<Reel>> getFeedReels({int limit = 12, int offset = 0}) async {
+    try {
+      final currentUserId = supabase.auth.currentUser!.id;
+      final res = await supabase.rpc('get_feed_reels', params: {'p_viewer': currentUserId, 'p_limit': limit, 'p_offset': offset});
+
+      final List rows = (res == null) ? [] : (res as List);
+      return rows.map((r) => Reel.fromMap(Map<String, dynamic>.from(r as Map))).toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase RPC error: ${e.message}');
+    } catch (e) {
+      throw Exception('getFeedReelsRpc failed: $e');
+    }
+  }
+
+  @override
+  Future<Reel> updateReelStatus({required String reelId, bool? isPublic}) async {
+    try {
+      final patch = {if (isPublic != null) 'is_public': isPublic, 'updated_at': DateTime.now().toUtc().toIso8601String()};
+
+      final res = await supabase.from('reels').update(patch).eq('id', reelId).select();
+      final List rows = res as List;
+      if (rows.isEmpty) {
+        throw Exception('No reel updated (id not found or permission denied)');
+      }
+      final updatedMap = Map<String, dynamic>.from(rows.first as Map);
+      return Reel.fromMap(updatedMap);
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase error when updating reel: ${e.message}');
+    } catch (e) {
+      throw Exception('Update reel failed: $e');
+    }
+  }
+
+  @override
+  Future<bool> deleteReelSoft({required String reelId}) async {
+    try {
+      final patch = {'is_public': false, 'updated_at': DateTime.now().toUtc().toIso8601String()};
+
+      final res = await supabase.from('reels').update(patch).eq('id', reelId).select();
+      final List rows = res as List;
+      return rows.isNotEmpty;
+    } on PostgrestException {
+      return false;
+    } catch (e) {
+      return false;
     }
   }
 

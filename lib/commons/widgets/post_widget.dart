@@ -12,7 +12,7 @@ import 'dart:async';
 
 import '../../models/post.dart';
 import '../../models/post_media.dart';
-import '../../screens/comments_screen/comment_screen.dart';
+import '../../utils/show_comment_sheet.dart';
 import '../../utils/time_ago.dart';
 import '../../utils/user_avatar.dart';
 import 'display_video.dart';
@@ -436,23 +436,4 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
       ],
     );
   }
-}
-
-void showCommentsModal(BuildContext context, {required String postId}) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) {
-      return DraggableScrollableSheet(
-        initialChildSize: 0.65,
-        minChildSize: 0.35,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) {
-          return CommentsModal(scrollController: scrollController, postId: postId);
-        },
-      );
-    },
-  );
 }
