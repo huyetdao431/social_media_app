@@ -73,7 +73,7 @@ abstract class Api {
   //</editor-fold>
 
   //<editor-fold desc="story's methods">
-  Future<Story> createStory({required File file, required DateTime expiresAt, String visibility = 'public'});
+  Future<Story> createStory({required File file, required DateTime expiresAt, required String visibility});
 
   Future<Story?> getStory(String storyId, String currentUserId);
 

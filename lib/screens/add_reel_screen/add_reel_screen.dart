@@ -3,11 +3,15 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_media_app/commons/enums/load_status.dart';
 import 'package:social_media_app/commons/widgets/video_trimmer_screen.dart';
-import 'package:social_media_app/cubit/reel_cubit/reel_cubit.dart';
+import 'package:social_media_app/cubit/reel_bloc/reel_bloc.dart';
+import 'package:social_media_app/cubit/reel_cubit/reel_cubit.dart' hide ReelState;
 import 'package:social_media_app/screens/add_reel_screen/edit_reel_screen.dart';
+import 'package:social_media_app/services/repositories/api/api.dart';
 import 'package:social_media_app/utils/dialogs.dart';
 import 'package:social_media_app/utils/get_video_duration.dart';
+import 'package:social_media_app/utils/overlay.dart';
 
 import '../../materials/app_colors.dart';
 import '../../commons/widgets/camera_screen.dart';
@@ -19,7 +23,7 @@ class AddReelScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => ReelCubit(), child: Theme(data: ThemeData.dark(), child: Page()));
+    return BlocProvider(create: (context) => ReelBloc(context.read<Api>()), child: Theme(data: ThemeData.dark(), child: Page()));
   }
 }
 
@@ -166,84 +170,93 @@ class _GalleryWidgetState extends State<GalleryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ReelCubit, ReelState>(
+    return BlocConsumer<ReelBloc, ReelState>(
+      listener: (context, state) {
+        // if(state.reelMedia != null && state.loadStatus == LoadStatus.done) {
+        //   Navigator.of(context).pushNamed(EditReelScreen.route, arguments: {'bloc': context.read<ReelBloc>()});
+        // }
+        if(state.loadStatus == LoadStatus.loading) {
+          LoadingOverlay.show(context);
+        }
+        if(state.loadStatus != LoadStatus.loading) {
+          LoadingOverlay.hide();
+        }
+      },
       builder: (context, state) {
-        var cubit = context.read<ReelCubit>();
+        var bloc = context.read<ReelBloc>();
         return _loading
             ? const Center(child: CircularProgressIndicator())
             : Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: GridView.builder(
-                controller: _scrollController,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 2,
-                  crossAxisSpacing: 2,
-                  childAspectRatio: 9 / 16, // tỉ lệ 9:16
-                ),
-                itemCount: _mediaList.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    // cell đầu tiên mở Camera
-                    return GestureDetector(
-                      onTap: () async {
-                        final result = await Navigator.of(context).pushNamed(CameraScreen.route) as Map<String, dynamic>;
-                        final file = result['file'] as File;
-                        final mediaType = result['mediaType'] as String;
-                        if (context.mounted) {
-                          context.read<ReelCubit>().setMediaType(mediaType);
-                          context.read<ReelCubit>().saveFileMedia(file);
-                          Navigator.of(context).pushNamed(EditReelScreen.route, arguments: {'cubit': context.read<ReelCubit>()});
-                        }
-                      },
-                      child: Container(color: Colors.black26, child: const Icon(Icons.camera_alt, size: 40)),
-                    );
+          padding: const EdgeInsets.only(top: 16.0),
+          child: GridView.builder(
+            controller: _scrollController,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 2,
+              crossAxisSpacing: 2,
+              childAspectRatio: 9 / 16,
+            ),
+            itemCount: _mediaList.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                // cell đầu tiên mở Camera
+                return GestureDetector(
+                  onTap: () async {
+                    final result = await Navigator.of(context).pushNamed(CameraScreen.route) as Map<String, dynamic>;
+                    final file = result['file'] as File;
+                    if (context.mounted) {
+                      bloc.add(SaveChangeEvent(file: file));
+                      Navigator.of(context).pushNamed(EditReelScreen.route, arguments: {'bloc': context.read<ReelBloc>()});
+                    }
+                  },
+                  child: Container(color: Colors.black26, child: const Icon(Icons.camera_alt, size: 40)),
+                );
+              }
+              final asset = _mediaList[index - 1];
+              return FutureBuilder<Uint8List?>(
+                future: _getThumb(asset),
+                builder: (_, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Container(color: Colors.grey[300]);
                   }
-                  final asset = _mediaList[index - 1];
-                  return FutureBuilder<Uint8List?>(
-                    future: _getThumb(asset),
-                    builder: (_, snapshot) {
-                      if (!snapshot.hasData) {
-                        return Container(color: Colors.grey[300]);
-                      }
-                      return Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          GestureDetector(
-                            onTap: () async {
-                              //TODO: go to edit reel screen
-                              final file = await asset.file;
-                              final duration = await getVideoDuration(file!.path);
-                              if (duration > 60) {
-                                await showNotificationDialog(context, message: 'Video must not longer than 60 seconds');
-                                final result = await Navigator.of(context).pushNamed(VideoTrimScreen.route, arguments: {'file': file}) as File;
-                                cubit.saveFileMedia(result);
-                              } else {
-                                cubit.saveFileMedia(file);
-                              }
-                              Navigator.of(context).pushNamed(EditReelScreen.route, arguments: {'cubit': cubit});
-                            },
-                            child: Image.memory(snapshot.data!, fit: BoxFit.cover),
-                          ),
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      GestureDetector(
+                        onTap: () async {
+                          //TODO: go to edit reel screen
+                          final file = await asset.file;
+                          final duration = await getVideoDuration(file!.path);
+                          if (duration > 60) {
+                            await showNotificationDialog(context, message: 'Video must not longer than 60 seconds');
+                            final result = await Navigator.of(context).pushNamed(VideoTrimScreen.route, arguments: {'file': file}) as File;
+                            bloc.add(SaveChangeEvent(file: result));
+                          } else {
+                            bloc.add(SaveChangeEvent(file: file));
+                          }
+                          Navigator.of(context).pushNamed(EditReelScreen.route, arguments: {'bloc': context.read<ReelBloc>()});
+                        },
+                        child: Image.memory(snapshot.data!, fit: BoxFit.cover),
+                      ),
 
-                          // overlay icon + thời lượng cho video
-                          if (asset.type == AssetType.video)
-                            Positioned(
-                              bottom: 4,
-                              right: 4,
-                              left: 4,
-                              child: Text(
-                                _formatDuration(asset.videoDuration),
-                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
+                      // overlay icon + thời lượng cho video
+                      if (asset.type == AssetType.video)
+                        Positioned(
+                          bottom: 4,
+                          right: 4,
+                          left: 4,
+                          child: Text(
+                            _formatDuration(asset.videoDuration),
+                            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                    ],
                   );
                 },
-              ),
-            );
+              );
+            },
+          ),
+        );
       },
     );
   }

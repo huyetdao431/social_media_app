@@ -35,6 +35,6 @@ class SaveChangeEvent extends StoryEvent {
 class CreateStoryEvent extends StoryEvent {
   final File file;
   final DateTime expiresAt;
-  final String? visibility;
-  CreateStoryEvent({required this.file, required this.expiresAt, this.visibility});
+  final String visibility;
+  CreateStoryEvent({required this.file, required this.expiresAt, required this.visibility});
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:social_media_app/commons/enums/load_status.dart';
 import 'package:social_media_app/utils/loader/comment_skeleton_loader.dart';
-import 'package:social_media_app/utils/user_avatar.dart';
+import 'package:social_media_app/commons/widgets/user_avatar.dart';
 
 import '../../cubit/comment_bloc/comment_bloc.dart';
 import '../../utils/time_ago.dart';

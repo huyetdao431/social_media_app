@@ -5,7 +5,7 @@ import 'package:social_media_app/cubit/comment_bloc/comment_bloc.dart';
 import 'package:social_media_app/cubit/main_cubit/main_cubit.dart';
 import 'package:social_media_app/utils/dialogs.dart';
 import 'package:social_media_app/utils/loader/comment_skeleton_loader.dart';
-import 'package:social_media_app/utils/user_avatar.dart';
+import 'package:social_media_app/commons/widgets/user_avatar.dart';
 import '../../models/comment.dart';
 import '../../services/repositories/api/api.dart';
 import 'comment_tile.dart';

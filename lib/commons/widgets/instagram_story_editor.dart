@@ -14,26 +14,26 @@ import 'package:pro_video_editor/pro_video_editor.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import '../../commons/widgets/stickers_gridview.dart';
-import '../../commons/enums/load_status.dart';
+import 'stickers_gridview.dart';
+import '../enums/load_status.dart';
 import '../../cubit/main_cubit/main_cubit.dart';
 import '../../cubit/story_bloc/story_bloc.dart';
 import '../../utils/overlay.dart';
 import '../../utils/dialogs.dart';
-import '../../core/mixin/example_helper.dart';
-import '../../commons/widgets/instagram_editor_appbar.dart';
+import '/core/mixin/example_helper.dart';
+import 'instagram_editor_appbar.dart';
 import '../../screens/main_screen/main_screen.dart';
 
-class EditStoryScreen extends StatefulWidget {
-  static const String route = 'EditStoryScreen';
+class InstagramStoryEditor extends StatefulWidget {
+  static const String route = 'InstagramStoryEditor';
 
-  const EditStoryScreen({super.key});
+  const InstagramStoryEditor({super.key});
 
   @override
-  State<EditStoryScreen> createState() => _EditStoryScreenState();
+  State<InstagramStoryEditor> createState() => _InstagramStoryEditorState();
 }
 
-class _EditStoryScreenState extends State<EditStoryScreen> with ExampleHelperState<EditStoryScreen>  {
+class _InstagramStoryEditorState extends State<InstagramStoryEditor> with ExampleHelperState<InstagramStoryEditor> {
   final bool _useMaterialDesign = platformDesignMode == ImageEditorDesignMode.material;
 
   final _whatsAppHelper = WhatsAppHelper();
@@ -165,9 +165,9 @@ class _EditStoryScreenState extends State<EditStoryScreen> with ExampleHelperSta
     widgets: FilterEditorWidgets(
       slider:
           (editorState, rebuildStream, value, onChanged, onChangeEnd) => ReactiveWidget(
-        stream: rebuildStream,
-        builder: (_) => Slider(onChanged: onChanged, onChangeEnd: onChangeEnd, value: value, activeColor: Colors.blue.shade200),
-      ),
+            stream: rebuildStream,
+            builder: (_) => Slider(onChanged: onChanged, onChangeEnd: onChangeEnd, value: value, activeColor: Colors.blue.shade200),
+          ),
       appBar: (filterEditor, rebuildStream) => null,
       bodyItems: (filterEditor, rebuildStream) => [ReactiveWidget(stream: rebuildStream, builder: (_) => FrostedGlassFilterAppbar(filterEditor: filterEditor))],
     ),
@@ -179,18 +179,18 @@ class _EditStoryScreenState extends State<EditStoryScreen> with ExampleHelperSta
       appBar: (cropRotateEditor, rebuildStream) => null,
       bottomBar:
           (cropRotateEditor, rebuildStream) => ReactiveWidget(
-        stream: rebuildStream,
-        builder:
-            (_) => WhatsAppCropRotateToolbar(
-          bottomBarColor: const Color(0xFF303030),
-          configs: cropRotateEditor.configs,
-          onCancel: cropRotateEditor.close,
-          onRotate: cropRotateEditor.rotate,
-          onDone: cropRotateEditor.done,
-          onReset: cropRotateEditor.reset,
-          openAspectRatios: cropRotateEditor.openAspectRatioOptions,
-        ),
-      ),
+            stream: rebuildStream,
+            builder:
+                (_) => WhatsAppCropRotateToolbar(
+                  bottomBarColor: const Color(0xFF303030),
+                  configs: cropRotateEditor.configs,
+                  onCancel: cropRotateEditor.close,
+                  onRotate: cropRotateEditor.rotate,
+                  onDone: cropRotateEditor.done,
+                  onReset: cropRotateEditor.reset,
+                  openAspectRatios: cropRotateEditor.openAspectRatioOptions,
+                ),
+          ),
     ),
     style: const CropRotateEditorStyle(cropCornerColor: Colors.white, helperLineColor: Colors.white, cropCornerLength: 28, cropCornerThickness: 3),
   );
@@ -456,28 +456,28 @@ class _EditStoryScreenState extends State<EditStoryScreen> with ExampleHelperSta
         stream: rebuildStream,
         builder:
             (_) => WhatsAppPaintBottomBar(
-          configs: paintEditor.configs,
-          strokeWidth: paintEditor.paintCtrl.strokeWidth,
-          initColor: paintEditor.paintCtrl.color,
-          onColorChanged: (color) {
-            paintEditor.paintCtrl.setColor(color);
-            paintEditor.uiPickerStream.add(null);
-          },
-          onSetLineWidth: paintEditor.setStrokeWidth,
-        ),
+              configs: paintEditor.configs,
+              strokeWidth: paintEditor.paintCtrl.strokeWidth,
+              initColor: paintEditor.paintCtrl.color,
+              onColorChanged: (color) {
+                paintEditor.paintCtrl.setColor(color);
+                paintEditor.uiPickerStream.add(null);
+              },
+              onSetLineWidth: paintEditor.setStrokeWidth,
+            ),
       ),
       if (!_useMaterialDesign) ReactiveWidget(stream: rebuildStream, builder: (_) => WhatsappPaintColorpicker(paintEditor: paintEditor)),
       ReactiveWidget(
         stream: rebuildStream,
         builder:
             (_) => WhatsAppPaintAppBar(
-          configs: paintEditor.configs,
-          canUndo: paintEditor.canUndo,
-          onDone: paintEditor.done,
-          onTapUndo: paintEditor.undoAction,
-          onClose: paintEditor.close,
-          activeColor: paintEditor.activeColor,
-        ),
+              configs: paintEditor.configs,
+              canUndo: paintEditor.canUndo,
+              onDone: paintEditor.done,
+              onTapUndo: paintEditor.undoAction,
+              onClose: paintEditor.close,
+              activeColor: paintEditor.activeColor,
+            ),
       ),
     ];
   }
@@ -498,25 +498,25 @@ class _EditStoryScreenState extends State<EditStoryScreen> with ExampleHelperSta
         stream: rebuildStream,
         builder:
             (_) => WhatsAppTextAppBar(
-          configs: textEditor.configs,
-          align: textEditor.align,
-          onDone: textEditor.done,
-          onAlignChange: textEditor.toggleTextAlign,
-          onBackgroundModeChange: textEditor.toggleBackgroundMode,
-        ),
+              configs: textEditor.configs,
+              align: textEditor.align,
+              onDone: textEditor.done,
+              onAlignChange: textEditor.toggleTextAlign,
+              onBackgroundModeChange: textEditor.toggleBackgroundMode,
+            ),
       ),
       ReactiveWidget(
         stream: rebuildStream,
         builder:
             (_) => WhatsAppTextBottomBar(
-          configs: textEditor.configs,
-          initColor: textEditor.primaryColor,
-          onColorChanged: (color) {
-            textEditor.primaryColor = color;
-          },
-          selectedStyle: textEditor.selectedTextStyle,
-          onFontChange: textEditor.setTextStyle,
-        ),
+              configs: textEditor.configs,
+              initColor: textEditor.primaryColor,
+              onColorChanged: (color) {
+                textEditor.primaryColor = color;
+              },
+              selectedStyle: textEditor.selectedTextStyle,
+              onFontChange: textEditor.setTextStyle,
+            ),
       ),
     ];
   }
@@ -671,15 +671,15 @@ class _EditStoryScreenState extends State<EditStoryScreen> with ExampleHelperSta
         useSafeArea: true,
         builder:
             (context) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 12.0),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-              clipBehavior: Clip.hardEdge,
-              child: WhatsAppStickerPage(configs: editor.configs, callbacks: editor.callbacks),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12.0),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+                  clipBehavior: Clip.hardEdge,
+                  child: WhatsAppStickerPage(configs: editor.configs, callbacks: editor.callbacks),
+                ),
+              ),
             ),
-          ),
-        ),
       );
     }
 

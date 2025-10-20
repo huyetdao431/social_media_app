@@ -50,29 +50,30 @@ class _PageState extends State<Page> {
           ),
           configs: ProImageEditorConfigs(
             theme: ThemeData.dark(),
-            textEditor: TextEditorConfigs(enabled: true),
+            mainEditor: MainEditorConfigs(
+                tools: [
+                  SubEditorMode.text,
+                  SubEditorMode.paint,
+                  SubEditorMode.cropRotate,
+                  SubEditorMode.filter,
+                  SubEditorMode.sticker,
+                  SubEditorMode.emoji,
+                  SubEditorMode.tune
+                ]
+            ),
             stickerEditor: StickerEditorConfigs(
-              enabled: true,
               builder: (addSticker, scrollController) {
                 return StickerMediaGrid(addSticker: addSticker, controller: scrollController);
               },
             ),
-
-            filterEditor: FilterEditorConfigs(enabled: true),
-            tuneEditor: TuneEditorConfigs(enabled: true),
             cropRotateEditor: CropRotateEditorConfigs(
-              enabled: true,
               initAspectRatio:
               cubit.state.aspectRatio == 1
                   ? CropAspectRatios.ratio1_1
                   : CropAspectRatios.ratio3_4,
-              showAspectRatioButton: false,
               style: CropRotateEditorStyle(cropCornerThickness: 0),
               maxWidthFactor: 1.0,
             ),
-            paintEditor: PaintEditorConfigs(enabled: false),
-            emojiEditor: EmojiEditorConfigs(enabled: false),
-            blurEditor: BlurEditorConfigs(enabled: false),
           ),
         );
       },

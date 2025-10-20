@@ -6,6 +6,7 @@ import 'package:social_media_app/cubit/story_bloc/story_bloc.dart';
 import 'package:social_media_app/materials/app_colors.dart';
 
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_media_app/commons/widgets/instagram_story_editor.dart';
 import 'package:social_media_app/screens/add_story_screen/edit_story_screen.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
 
@@ -187,6 +188,7 @@ class _GalleryWidgetState extends State<GalleryWidget> {
       listenWhen: (prev, curr) => prev.storyMedia != curr.storyMedia,
       listener: (context, state) {
         Navigator.of(context).pushNamed(EditStoryScreen.route, arguments: {'bloc': context.read<StoryBloc>()});
+        // Navigator.of(context).pushNamed(InstagramStoryEditor.route, arguments: {'bloc': context.read<StoryBloc>()});
       },
       builder: (context, state) {
         var bloc = context.read<StoryBloc>();
