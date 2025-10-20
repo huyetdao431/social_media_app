@@ -6,7 +6,8 @@ class CreateReelEvent extends ReelEvent {
   final File file;
   final String? content;
   final bool? isPublic;
-  CreateReelEvent({required this.file, this.content, this.isPublic});
+  final File thumbImage;
+  CreateReelEvent({required this.file, this.content, this.isPublic, required this.thumbImage});
 }
 
 class GetReelsByUserEvent extends ReelEvent {
