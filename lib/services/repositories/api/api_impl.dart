@@ -315,8 +315,18 @@ class ApiImpl implements Api {
   }
 
   @override
-  Future<String?> generateVideoThumb(String bucketName, File videoFile, String userId) async {
+  Future<String?> generateVideoThumb({required String bucketName, required File videoFile, required String userId, File? thumbImage}) async {
     try {
+      if (thumbImage != null) {
+        final thumbUrl = await uploadFile(
+          bucketName: bucketName,
+          file: thumbImage,
+          userId: userId,
+          folder: 'thumbnails',
+        );
+        return thumbUrl;
+      }
+
       final dir = await getTemporaryDirectory();
       final thumbPath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}_thumb.jpg';
 
@@ -330,7 +340,12 @@ class ApiImpl implements Api {
       }
 
       final thumbFile = File(thumbPath);
-      final thumbUrl = await uploadFile(bucketName: bucketName, file: thumbFile, userId: userId, folder: 'thumbnails');
+      final thumbUrl = await uploadFile(
+        bucketName: bucketName,
+        file: thumbFile,
+        userId: userId,
+        folder: 'thumbnails',
+      );
 
       return thumbUrl;
     } catch (e, st) {
@@ -355,7 +370,7 @@ class ApiImpl implements Api {
       String? thumbUrl;
 
       if (isVideo) {
-        thumbUrl = await generateVideoThumb('posts', file, userId);
+        thumbUrl = await generateVideoThumb(bucketName: 'posts', videoFile: file, userId:  userId);
       } else {
         thumbUrl = null;
       }
@@ -581,7 +596,7 @@ class ApiImpl implements Api {
       final mimeType = lookupMimeType(file.path);
       final isVideo = mimeType != null && mimeType.startsWith('video');
       final int duration = isVideo ? await getVideoDuration(file.path) : 10;
-      final thumbUrl = isVideo ? await generateVideoThumb('stories', file, userId) : null;
+      final thumbUrl = isVideo ? await generateVideoThumb(bucketName: 'stories', videoFile: file, userId: userId) : null;
       final insertBody = {
         'user_id': userId,
         'media_url': publicUrl,
@@ -717,14 +732,13 @@ class ApiImpl implements Api {
   //<editor-fold  desc="reel's methods">
 
   @override
-  Future<Reel> createReel({required File file, String caption = '', bool isPublic = true}) async {
+  Future<Reel> createReel({required File file, String caption = '', bool isPublic = true, required File thumbImage}) async {
     try {
       final String userId = supabase.auth.currentUser!.id;
       final publicUrl = await uploadFile(bucketName: 'reels', file: file, userId: userId, folder: 'reels');
 
-      final mimeType = lookupMimeType(file.path);
       final int duration = await getVideoDuration(file.path);
-      final poster = await generateVideoThumb('reels', file, userId);
+      final poster = await generateVideoThumb(bucketName: 'reels', videoFile: file, userId: userId, thumbImage: thumbImage);
 
       final insertBody = {
         'user_id': userId,
@@ -734,7 +748,6 @@ class ApiImpl implements Api {
         'is_public': isPublic,
         'created_at': DateTime.now().toUtc().toIso8601String(),
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-        'mime_type': mimeType,
         'duration': duration,
         'view_count': 0,
         'like_count': 0,

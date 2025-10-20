@@ -22,7 +22,7 @@ class ReelBloc extends Bloc<ReelEvent, ReelState> {
   Future<void> _onCreateReel(CreateReelEvent event, Emitter<ReelState> emit) async {
     emit(state.copyWith(loadReelStatus: LoadStatus.loading));
     try {
-      await api.createReel(file: event.file, caption: event.content!, isPublic: event.isPublic!);
+      await api.createReel(file: event.file, caption: event.content ?? '', isPublic: event.isPublic ?? true, thumbImage: event.thumbImage);
       emit(state.copyWith(loadReelStatus: LoadStatus.done));
     } catch(e) {
       emit(state.copyWith(loadReelStatus: LoadStatus.error, errorMessage: e.toString()));

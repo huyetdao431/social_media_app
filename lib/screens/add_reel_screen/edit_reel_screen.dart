@@ -286,9 +286,7 @@ class _EditReelScreenState extends State<EditReelScreen> with ExampleHelperState
   void dispose() {
     _captionFocus.dispose();
     _proVideoController?.dispose();
-    if (_videoInitialized) {
-      _videoController.dispose();
-    }
+    _videoController.dispose();
     super.dispose();
   }
 

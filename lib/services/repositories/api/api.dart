@@ -45,7 +45,7 @@ abstract class Api {
 
   //<editor-fold desc="post">
 
-  Future<String?> generateVideoThumb(String bucketName, File videoFile, String userId);
+  Future<String?> generateVideoThumb({required String bucketName, required File videoFile, required String userId, File? thumbImage});
 
   Future<String> createPost({required String userId, required String caption, required List<File> files, required double aspectRatio});
 
@@ -90,7 +90,7 @@ abstract class Api {
   //</editor-fold>
 
   //<editor-fold desc="reel's methods">
-  Future<Reel> createReel({required File file, String caption = '', bool isPublic = true});
+  Future<Reel> createReel({required File file, String caption = '', bool isPublic = true, required File thumbImage});
 
   Future<Reel?> getReel(String reelId, {String? currentUserId});
 
