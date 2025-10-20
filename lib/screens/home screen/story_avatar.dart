@@ -36,7 +36,11 @@ class StoryAvatar extends StatelessWidget {
         Container(
           width: size,
           height: size,
-          decoration: BoxDecoration(shape: BoxShape.circle, gradient: ringGradient),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: hasStories ? ringGradient : null,
+            color: hasStories ? null : Colors.grey[300],
+          ),
           child: Padding(
             padding: const EdgeInsets.all(ringWidth),
             child: ClipOval(

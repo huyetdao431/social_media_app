@@ -14,7 +14,7 @@ import '../../models/post.dart';
 import '../../models/post_media.dart';
 import '../../utils/show_comment_sheet.dart';
 import '../../utils/time_ago.dart';
-import '../../utils/user_avatar.dart';
+import 'user_avatar.dart';
 import 'display_video.dart';
 
 class PostWidget extends StatefulWidget {

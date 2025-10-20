@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:social_media_app/commons/widgets/video_trimmer_screen.dart';
 import 'package:social_media_app/cubit/post_cubit/post_cubit.dart';
-import 'package:social_media_app/cubit/reel_cubit/reel_cubit.dart';
+import 'package:social_media_app/cubit/reel_bloc/reel_bloc.dart';
 import 'package:social_media_app/cubit/story_bloc/story_bloc.dart';
 import 'package:social_media_app/screens/account_screen/account_screen.dart';
 import 'package:social_media_app/screens/account_screen/account_setting_screen.dart';
@@ -17,7 +17,7 @@ import 'package:social_media_app/screens/add_post_screen/edit_video_screen.dart'
 import 'package:social_media_app/screens/add_post_screen/preview_post_screen.dart';
 import 'package:social_media_app/screens/add_reel_screen/add_reel_screen.dart';
 import 'package:social_media_app/screens/add_reel_screen/edit_reel_screen.dart';
-import 'package:social_media_app/screens/add_reel_screen/video_frosted_glass_xample.dart';
+import 'package:social_media_app/screens/add_reel_screen/preview_reel_screen.dart';
 import 'package:social_media_app/screens/add_story_screen/add_story_screen.dart';
 import 'package:social_media_app/screens/add_story_screen/edit_story_screen.dart';
 import 'package:social_media_app/screens/create_media_screen/create_media_screen.dart';
@@ -87,11 +87,11 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       var bloc = (settings.arguments as Map<String, dynamic>)['bloc'] as StoryBloc;
       return MaterialPageRoute(builder: (context) => BlocProvider.value(value: bloc, child: EditStoryScreen()));
     case EditReelScreen.route:
-      var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as ReelCubit;
-      return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: EditReelScreen()));
-    case VideoFrostedGlassExample.route:
-      var fileVideo = (settings.arguments as Map<String, dynamic>)['fileVideo'] as File;
-      return MaterialPageRoute(builder: (context) => VideoFrostedGlassExample(fileVideo: fileVideo,));
+      var bloc = (settings.arguments as Map<String, dynamic>)['bloc'] as ReelBloc;
+      return MaterialPageRoute(builder: (context) => BlocProvider.value(value: bloc, child: EditReelScreen()));
+    case ReelPreviewScreen.route:
+      var bloc = (settings.arguments as Map<String, dynamic>)['bloc'] as ReelBloc;
+      return MaterialPageRoute(builder: (context) => BlocProvider.value(value: bloc, child: ReelPreviewScreen()));
     case StoryScreen.route:
       var stories = (settings.arguments as Map<String, dynamic>)['stories'] as Map<String, List<Story>>;
       var startUserId = (settings.arguments as Map<String, dynamic>)['startUserId'] as String;

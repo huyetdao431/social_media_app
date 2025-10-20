@@ -74,12 +74,7 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
   Future<void> _onCreateStory(CreateStoryEvent event, Emitter<StoryState> emit) async {
     emit(state.copyWith(loadStatus: LoadStatus.loading));
     try {
-      Story story;
-      if(event.visibility != null) {
-        story = await api.createStory(file: event.file, expiresAt: event.expiresAt);
-      } else {
-        story = await api.createStory(file: event.file, expiresAt: event.expiresAt, visibility: event.visibility.toString());
-      }
+      final story = await api.createStory(file: event.file, expiresAt: event.expiresAt, visibility: event.visibility.toString());
       emit(state.copyWith(loadStatus: LoadStatus.done, currentStory: story));
     } catch (e) {
       emit(state.copyWith(loadStatus: LoadStatus.error, errorMessage: e.toString()));

@@ -6,6 +6,7 @@ import 'package:pro_image_editor/pro_image_editor.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../commons/widgets/stickers_gridview.dart';
 import '../../cubit/post_cubit/post_cubit.dart';
 
 class EditVideoScreen extends StatelessWidget {
@@ -38,7 +39,14 @@ class _PageState extends State<Page> {
   final _taskId = DateTime.now().microsecondsSinceEpoch.toString();
   String? _outputPath;
 
-  final _videoConfigs = const VideoEditorConfigs(initialMuted: false, initialPlay: true, isAudioSupported: true, minTrimDuration: Duration(seconds: 3));
+  final _videoConfigs = VideoEditorConfigs(
+    initialMuted: false,
+    initialPlay: true,
+    isAudioSupported: true,
+    style: const VideoEditorStyle(trimBarHeight: 0, trimDurationBackground: Colors.transparent, trimDurationTextColor: Colors.transparent),
+    controlsPosition: VideoEditorControlPosition.bottom,
+    widgets: VideoEditorWidgets(trimBar: SizedBox.shrink(), trimDurationInfo: null, infoBanner: null, trimBarSkeletonLoader: SizedBox.shrink()),
+  );
 
   @override
   void initState() {
@@ -199,10 +207,23 @@ class _PageState extends State<Page> {
                   ),
                 ),
                 configs: ProImageEditorConfigs(
-                  paintEditor: PaintEditorConfigs(enabled: false),
-                  blurEditor: BlurEditorConfigs(enabled: false),
-                  videoEditor: _videoConfigs.copyWith(playTimeSmoothingDuration: const Duration(milliseconds: 500)),
-                  cropRotateEditor: CropRotateEditorConfigs(enabled: true, initAspectRatio: cubit.state.aspectRatio, showAspectRatioButton: false),
+                  mainEditor: MainEditorConfigs(
+                    tools: [
+                      SubEditorMode.text,
+                      SubEditorMode.paint,
+                      SubEditorMode.cropRotate,
+                      SubEditorMode.filter,
+                      SubEditorMode.sticker,
+                      SubEditorMode.emoji,
+                      SubEditorMode.tune,
+                    ],
+                  ),
+                  stickerEditor: StickerEditorConfigs(
+                    builder: (addSticker, scrollController) {
+                      return StickerMediaGrid(addSticker: addSticker, controller: scrollController);
+                    },
+                  ),
+                  videoEditor: _videoConfigs,
                 ),
               ),
             ],

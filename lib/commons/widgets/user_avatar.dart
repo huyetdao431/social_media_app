@@ -10,6 +10,7 @@ Widget userAvatar(String? avatarUrl) {
         height: 44,
         fit: BoxFit.cover,
         placeholder: (_, __) => Container(color: Colors.grey[300], width: 44, height: 44),
+        errorWidget: (_, __, ___) => Container(color: Colors.grey[300], child: const Icon(Icons.person, size: 32)),
       ),
     );
   }

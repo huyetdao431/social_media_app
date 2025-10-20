@@ -21,3 +21,13 @@ class GetFeedReelsEvent extends ReelEvent {
   final int? offset;
   GetFeedReelsEvent({this.limit, this.offset});
 }
+
+class LoadDataEvent extends ReelEvent {
+  final AssetEntity asset;
+  LoadDataEvent({required this.asset});
+}
+
+class SaveChangeEvent extends ReelEvent {
+  final File file;
+  SaveChangeEvent({required this.file});
+}

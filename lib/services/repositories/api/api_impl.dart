@@ -573,7 +573,7 @@ class ApiImpl implements Api {
   //<editor-fold desc="story's methods">
 
   @override
-  Future<Story> createStory({required File file, required DateTime expiresAt, String visibility = 'public'}) async {
+  Future<Story> createStory({required File file, required DateTime expiresAt, required String visibility}) async {
     try {
       final String userId = supabase.auth.currentUser!.id;
       final publicUrl = await uploadFile(bucketName: 'stories', file: file, userId: userId, folder: 'stories');
@@ -582,7 +582,6 @@ class ApiImpl implements Api {
       final isVideo = mimeType != null && mimeType.startsWith('video');
       final int duration = isVideo ? await getVideoDuration(file.path) : 10;
       final thumbUrl = isVideo ? await generateVideoThumb('stories', file, userId) : null;
-
       final insertBody = {
         'user_id': userId,
         'media_url': publicUrl,
@@ -631,26 +630,16 @@ class ApiImpl implements Api {
   @override
   Future<List<Story>> getStoriesByUser({required String userId, int limit = 12, int offset = 0}) async {
     try {
-      final now = DateTime.now().toUtc().toIso8601String();
       final currentUserId = supabase.auth.currentUser!.id;
 
-      final res = await supabase
-          .from('stories')
-          .select('*, profiles(username, avatar_url), story_views!left(viewer_id)')
-          .eq('user_id', userId)
-          .eq('is_active', true)
-          .neq('visibility', 'disabled')
-          .gt('expires_at', now)
-          .eq('story_views.viewer_id', currentUserId)
-          .order('created_at', ascending: true)
-          .range(offset, offset + limit - 1);
+      final res = await supabase.rpc('get_stories_by_user', params: {'p_user': userId, 'p_viewer': currentUserId, 'p_limit': limit, 'p_offset': offset});
 
-      final List rows = res as List;
+      final List rows = (res ?? []) as List;
       return rows.map((r) => Story.fromMap(Map<String, dynamic>.from(r as Map))).toList();
     } on PostgrestException catch (e) {
-      throw Exception('Supabase error when listing stories by user: ${e.message}');
+      throw Exception('Supabase RPC error: ${e.message}');
     } catch (e) {
-      throw Exception('Get stories by user failed: $e');
+      throw Exception('getStoriesByUser failed: $e');
     }
   }
 
@@ -663,6 +652,7 @@ class ApiImpl implements Api {
       final List rows = (res == null) ? [] : (res as List);
       return rows.map((r) {
         final Map<String, dynamic> m = Map<String, dynamic>.from(r as Map);
+        print(Story.fromMap(m));
         return Story.fromMap(m);
       }).toList();
     } on PostgrestException catch (e) {

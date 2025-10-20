@@ -308,7 +308,7 @@ class _ProfileHeader extends StatelessWidget {
                     imageUrl: avatarUrl!,
                     fit: BoxFit.cover,
                     placeholder: (ctx, url) => Container(color: Colors.grey[300]),
-                    errorWidget: (ctx, url, error) => Container(color: Colors.grey, child: const Icon(Icons.error)),
+                    errorWidget: (_, __, ___) => Container(color: Colors.grey[300], child: const Icon(Icons.person, size: 32)),
                   ),
                 ),
                 Container(
