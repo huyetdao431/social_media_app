@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:social_media_app/utils/loader/progress_line.dart';
 import 'package:social_media_app/utils/show_comment_sheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../commons/widgets/display_video.dart';
 import '../../models/reel.dart';
 import 'package:video_player/video_player.dart';
+
+import '../../utils/loader/image_placeholder.dart';
 
 class ReelsItem extends StatefulWidget {
   final Reel reel;
@@ -12,13 +15,7 @@ class ReelsItem extends StatefulWidget {
   final VoidCallback onTapTogglePlay;
   final int index;
 
-  const ReelsItem({
-    super.key,
-    required this.reel,
-    required this.shouldPlay,
-    required this.onTapTogglePlay,
-    required this.index,
-  });
+  const ReelsItem({super.key, required this.reel, required this.shouldPlay, required this.onTapTogglePlay, required this.index});
 
   @override
   State<ReelsItem> createState() => _ReelsItemState();
@@ -35,6 +32,9 @@ class _ReelsItemState extends State<ReelsItem> with SingleTickerProviderStateMix
   Alignment _heartAlignment = Alignment.center;
   VideoPlayerController? _innerCtrl;
 
+  bool get _videoReady => _innerCtrl != null && _innerCtrl!.value.isInitialized;
+  bool get _shouldShowThumb => !_videoReady;
+
   @override
   void initState() {
     super.initState();
@@ -43,8 +43,10 @@ class _ReelsItemState extends State<ReelsItem> with SingleTickerProviderStateMix
       TweenSequenceItem(tween: Tween(begin: 0.6, end: 1.4).chain(CurveTween(curve: Curves.easeOut)), weight: 60),
       TweenSequenceItem(tween: Tween(begin: 1.4, end: 0.95).chain(CurveTween(curve: Curves.easeIn)), weight: 40),
     ]).animate(_heartController);
-    _opacityAnim = Tween<double>(begin: 1.0, end: 0.0)
-        .animate(CurvedAnimation(parent: _heartController, curve: const Interval(0.6, 1.0, curve: Curves.easeOut)));
+    _opacityAnim = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _heartController, curve: const Interval(0.6, 1.0, curve: Curves.easeOut)));
   }
 
   @override
@@ -78,27 +80,41 @@ class _ReelsItemState extends State<ReelsItem> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        Positioned.fill(
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 250),
+            opacity: _shouldShowThumb ? 1.0 : 0.0,
+            curve: Curves.easeOut,
+            child: CachedNetworkImage(
+              imageUrl: widget.reel.posterUrl,
+              fit: BoxFit.fitWidth,
+              placeholder: (ctx, url) => const CachedImagePlaceholder(),
+              errorWidget: (_, __, ___) => Container(color: Colors.black),
+            ),
+          ),
+        ),
+
         Center(
           child: SmartVideo(
             url: widget.reel.mediaUrl,
             shouldPlay: widget.shouldPlay,
+            showLoadingIndicator: false,
             showProgress: false,
             allowScrubbing: false,
             onInitialized: (ctrl) {
-              if (mounted) setState(() => _innerCtrl = ctrl);
+              if (mounted) {
+                setState(() => _innerCtrl = ctrl);
+              }
             },
           ),
         ),
+
         Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black54],
-              stops: [0.6, 1.0],
-            ),
+            gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black54], stops: [0.6, 1.0]),
           ),
         ),
+
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
@@ -121,6 +137,7 @@ class _ReelsItemState extends State<ReelsItem> with SingleTickerProviderStateMix
             ),
           ),
         ),
+
         if (_showHeart)
           IgnorePointer(
             ignoring: true,
@@ -140,6 +157,7 @@ class _ReelsItemState extends State<ReelsItem> with SingleTickerProviderStateMix
               },
             ),
           ),
+
         Positioned(
           left: 0,
           bottom: 0,
@@ -169,14 +187,12 @@ class _ReelsItemState extends State<ReelsItem> with SingleTickerProviderStateMix
                 ),
               ),
               const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(widget.reel.caption, style: const TextStyle(color: Colors.white)),
-              ),
+              Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(widget.reel.caption, style: const TextStyle(color: Colors.white))),
               const SizedBox(height: 8),
             ],
           ),
         ),
+
         Positioned(
           right: 12,
           bottom: 60,
@@ -195,9 +211,10 @@ class _ReelsItemState extends State<ReelsItem> with SingleTickerProviderStateMix
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
                       transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                      child: _liked
-                          ? const Icon(Icons.favorite, key: ValueKey('liked'), color: Colors.red, size: 40)
-                          : const Icon(Icons.favorite, key: ValueKey('unliked'), color: Colors.white, size: 40),
+                      child:
+                          _liked
+                              ? const Icon(Icons.favorite, key: ValueKey('liked'), color: Colors.red, size: 40)
+                              : const Icon(Icons.favorite, key: ValueKey('unliked'), color: Colors.white, size: 40),
                     ),
                     const SizedBox(height: 6),
                     Text('$_likes', style: const TextStyle(color: Colors.white)),
@@ -207,18 +224,17 @@ class _ReelsItemState extends State<ReelsItem> with SingleTickerProviderStateMix
               const SizedBox(height: 18),
               Column(
                 children: [
-                  GestureDetector(onTap: () => showCommentsModal(context, targetType: 'post', targetId: widget.reel.reelId), child: const Icon(Icons.chat_bubble, size: 36, color: Colors.white)),
+                  GestureDetector(
+                    onTap: () => showCommentsModal(context, targetType: 'post', targetId: widget.reel.reelId),
+                    child: const Icon(Icons.chat_bubble, size: 36, color: Colors.white),
+                  ),
                   const SizedBox(height: 6),
                   const Text('256', style: TextStyle(color: Colors.white)),
                 ],
               ),
               const SizedBox(height: 18),
               Column(
-                children: const [
-                  Icon(Icons.send, size: 36, color: Colors.white),
-                  SizedBox(height: 6),
-                  Text('Share', style: TextStyle(color: Colors.white)),
-                ],
+                children: const [Icon(Icons.send, size: 36, color: Colors.white), SizedBox(height: 6), Text('Share', style: TextStyle(color: Colors.white))],
               ),
               const SizedBox(height: 18),
               const Icon(Icons.more_vert, size: 36, color: Colors.white),
@@ -226,30 +242,25 @@ class _ReelsItemState extends State<ReelsItem> with SingleTickerProviderStateMix
             ],
           ),
         ),
-        if (_innerCtrl != null && _innerCtrl!.value.isInitialized)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black45, // nền mờ để progress hiện rõ
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: SizedBox(
-                height: 8,
-                child: VideoProgressIndicator(
-                  _innerCtrl!,
-                  allowScrubbing: false,
-                  colors: const VideoProgressColors(
-                    playedColor: Colors.white,
-                    backgroundColor: Colors.white24,
-                    bufferedColor: Colors.white38,
+
+        (_innerCtrl != null && _innerCtrl!.value.isInitialized)
+            ? Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(6)),
+                child: SizedBox(
+                  height: 8,
+                  child: VideoProgressIndicator(
+                    _innerCtrl!,
+                    allowScrubbing: false,
+                    colors: const VideoProgressColors(playedColor: Colors.white, backgroundColor: Colors.white24, bufferedColor: Colors.white38),
                   ),
                 ),
               ),
-            ),
-          ),
+            )
+            : Positioned(bottom: 0, left: 0, right: 0, child: LoadingLine(height: 3)),
       ],
     );
   }

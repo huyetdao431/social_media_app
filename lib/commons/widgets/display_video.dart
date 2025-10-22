@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:social_media_app/materials/app_colors.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_video_player_plus/cached_video_player_plus.dart';
 
@@ -8,6 +7,7 @@ class SmartVideo extends StatefulWidget {
   final File? file;
   final String? url;
   final bool shouldPlay;
+  final bool showLoadingIndicator;
   final double? aspectRatio;
   final bool showProgress;
   final bool allowScrubbing;
@@ -18,6 +18,7 @@ class SmartVideo extends StatefulWidget {
     this.file,
     this.url,
     required this.shouldPlay,
+    this.showLoadingIndicator = true,
     this.aspectRatio,
     this.showProgress = false,
     this.allowScrubbing = false,
@@ -75,10 +76,7 @@ class _SmartVideoState extends State<SmartVideo> {
     _disposeCurrentController();
     try {
       if (widget.url != null) {
-        final player = CachedVideoPlayerPlus.networkUrl(
-          Uri.parse(widget.url!),
-          invalidateCacheIfOlderThan: const Duration(minutes: 10),
-        );
+        final player = CachedVideoPlayerPlus.networkUrl(Uri.parse(widget.url!), invalidateCacheIfOlderThan: const Duration(minutes: 10));
         await player.initialize();
         _cachedPlayer = player;
         _controller = player.controller;
@@ -137,11 +135,9 @@ class _SmartVideoState extends State<SmartVideo> {
     if (!_initialized || _controller == null) {
       final width = MediaQuery.sizeOf(context).width;
       final size = width;
-      return SizedBox(
-        width: size,
-        height: size,
-        child: const Center(child: CircularProgressIndicator.adaptive()),
-      );
+      return widget.showLoadingIndicator
+          ? SizedBox(width: size, height: size, child: const Center(child: CircularProgressIndicator.adaptive()))
+          : const SizedBox.shrink();
     }
 
     final videoSize = _controller!.value.size;
@@ -150,46 +146,12 @@ class _SmartVideoState extends State<SmartVideo> {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final calculatedHeight = screenWidth / aspect;
 
-    final videoWidget = FittedBox(
-      fit: BoxFit.cover,
-      child: SizedBox(
-        width: videoSize.width,
-        height: videoSize.height,
-        child: VideoPlayer(_controller!),
-      ),
-    );
-
-    final progressBar = widget.showProgress
-        ? Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: SizedBox(
-        height: 30,
-        child: VideoProgressIndicator(
-          _controller!,
-          allowScrubbing: widget.allowScrubbing,
-          colors: const VideoProgressColors(
-            playedColor: Colors.white,
-            backgroundColor: Colors.white24,
-            bufferedColor: Colors.transparent,
-          ),
-        ),
-      ),
-    )
-        : const SizedBox.shrink();
+    final videoWidget = FittedBox(fit: BoxFit.cover, child: SizedBox(width: videoSize.width, height: videoSize.height, child: VideoPlayer(_controller!)));
 
     if (widget.aspectRatio != null) {
-      return AspectRatio(
-        aspectRatio: aspect,
-        child: Stack(fit: StackFit.expand, children: [videoWidget, progressBar]),
-      );
+      return AspectRatio(aspectRatio: aspect, child: Stack(fit: StackFit.expand, children: [videoWidget]));
     }
 
-    return SizedBox(
-      width: screenWidth,
-      height: calculatedHeight,
-      child: Stack(fit: StackFit.expand, children: [videoWidget, progressBar]),
-    );
+    return SizedBox(width: screenWidth, height: calculatedHeight, child: Stack(fit: StackFit.expand, children: [videoWidget]));
   }
 }

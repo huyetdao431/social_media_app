@@ -20,7 +20,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   final List<Widget?> _pages = List.filled(5, null);
-  final GlobalKey<ReelsScreenState> _reelsKey = GlobalKey<ReelsScreenState>();
+  final GlobalKey<ReelPageState> _reelsKey = GlobalKey<ReelPageState>();
   bool _createMediaOpening = false; // prevent double open
 
   void onItemTapped(int index) {
