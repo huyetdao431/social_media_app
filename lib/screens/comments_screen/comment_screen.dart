@@ -78,6 +78,7 @@ class _CommentPageState extends State<CommentPage> {
     var bloc = context.read<CommentBloc>();
     if(isReply) {
       bloc.add(CreateReply(targetType: 'post',targetId: bloc.state.postId, userId: context.read<MainCubit>().state.profile!.id, content: text, parentId: parentId));
+      isReply = false;
     } else {
       bloc.add(CreateComment(targetType: 'post',targetId: bloc.state.postId, userId: context.read<MainCubit>().state.profile!.id, content: text));
     }

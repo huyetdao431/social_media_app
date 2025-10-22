@@ -11,7 +11,7 @@ class SearchScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => SearchCubit(), child: Page());
+    return BlocProvider(create: (context) => SearchCubit(), child: Scaffold(body: Page()));
   }
 }
 
@@ -60,9 +60,7 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   void _onScroll() {
-    if (scrollController.position.pixels >=
-            scrollController.position.maxScrollExtent &&
-        !isLoadingMore) {
+    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent && !isLoadingMore) {
       _loadMoreItems();
     }
   }
@@ -99,12 +97,7 @@ class _ExplorePageState extends State<ExplorePage> {
             Expanded(
               child: GridView.builder(
                 controller: scrollController,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 2,
-                  crossAxisSpacing: 2,
-                  childAspectRatio: 1,
-                ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 2, crossAxisSpacing: 2, childAspectRatio: 1),
                 itemCount: _itemCount + (isLoadingMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (isLoadingMore && index == _itemCount) {
@@ -117,23 +110,10 @@ class _ExplorePageState extends State<ExplorePage> {
                     child: Stack(
                       children: [
                         Container(
-                          color:
-                              index % 2 == 0
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.error,
-                          child: Image.asset(
-                            'assets/images/avt_10.png',
-                            fit: BoxFit.cover,
-                          ),
+                          color: index % 2 == 0 ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error,
+                          child: Image.asset('assets/images/avt_10.png', fit: BoxFit.cover),
                         ),
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Icon(
-                            Icons.filter_none,
-                            color: AppColors.textLight,
-                          ),
-                        ),
+                        Positioned(top: 8, right: 8, child: Icon(Icons.filter_none, color: AppColors.textLight)),
                       ],
                     ),
                   );
@@ -214,18 +194,10 @@ class _SearchPageState extends State<SearchPage> {
                       decoration: InputDecoration(
                         hintText: 'Input search information',
                         hintStyle: TextStyle(color: theme.hintColor),
-                        contentPadding: EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 16,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide.none,
-                        ),
+                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
                         filled: true,
-                        fillColor:
-                            colorScheme
-                                .surfaceContainerHighest, // phù hợp với dark/light mode
+                        fillColor: colorScheme.surfaceContainerHighest, // phù hợp với dark/light mode
                       ),
                       style: TextStyle(color: colorScheme.onSurface),
                       // màu chữ
@@ -236,49 +208,22 @@ class _SearchPageState extends State<SearchPage> {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 12,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                   child: Column(
                     children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'recently',
-                          style: AppTextStyles.subHeadline(context),
-                        ),
-                      ),
+                      Align(alignment: Alignment.centerLeft, child: Text('recently', style: AppTextStyles.subHeadline(context))),
                       SizedBox(height: 12),
                       Row(
                         children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundImage: AssetImage(
-                              'assets/images/avt_02.png',
-                            ),
-                            backgroundColor: Colors.transparent,
-                          ),
+                          CircleAvatar(radius: 24, backgroundImage: AssetImage('assets/images/avt_02.png'), backgroundColor: Colors.transparent),
                           SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'username',
-                                  style: AppTextStyles.username(context),
-                                ),
-                                Text(
-                                  'Name',
-                                  style: AppTextStyles.name(context),
-                                ),
-                              ],
+                              children: [Text('username', style: AppTextStyles.username(context)), Text('Name', style: AppTextStyles.name(context))],
                             ),
                           ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: Icon(Icons.close, size: 16),
-                          ),
+                          IconButton(onPressed: () {}, icon: Icon(Icons.close, size: 16)),
                         ],
                       ),
                     ],

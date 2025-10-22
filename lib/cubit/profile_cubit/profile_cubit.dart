@@ -7,6 +7,8 @@ import 'package:social_media_app/models/profile/profile.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
 import 'package:social_media_app/services/repositories/hive/profile_repository.dart';
 
+import '../../models/reel.dart';
+
 part 'profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
@@ -80,6 +82,37 @@ class ProfileCubit extends Cubit<ProfileState> {
       emit(state.copyWith(loadPostStatus: LoadStatus.done, userPosts: updatedPosts, hasMorePosts: hasMore));
     } catch (e) {
       emit(state.copyWith(loadPostStatus: LoadStatus.error, errorMessage: e.toString(), hasMorePosts: false));
+    }
+  }
+
+  Future<void> loadUserReels() async {
+    emit(state.copyWith(loadReelStatus: LoadStatus.loading));
+    try {
+      final userReels = await api.getReelsByUser(userId: state.userProfile!.id);
+      emit(state.copyWith(loadReelStatus: LoadStatus.done, userReels: userReels));
+    } catch (e) {
+      emit(state.copyWith(loadReelStatus: LoadStatus.error, errorMessage: e.toString()));
+      throw Exception(e);
+    }
+  }
+
+  Future<void> loadMoreReels() async {
+    if (state.loadPostStatus == LoadStatus.loading || !state.hasMoreReels) return;
+
+    emit(state.copyWith(loadPostStatus: LoadStatus.loading));
+    try {
+      final offset = state.userReels.length;
+      const limit = 6;
+      final nextReels = await api.getReelsByUser(userId: state.userProfile!.id, limit: limit, offset: offset);
+      final bool hasMore = nextReels.length == limit;
+      if (nextReels.isEmpty) {
+        emit(state.copyWith(loadPostStatus: LoadStatus.done, hasMoreReels: false));
+        return;
+      }
+      final updatedReels = List<Reel>.from(state.userReels)..addAll(nextReels);
+      emit(state.copyWith(loadPostStatus: LoadStatus.done, userReels: updatedReels, hasMoreReels: hasMore));
+    } catch (e) {
+      emit(state.copyWith(loadPostStatus: LoadStatus.error, errorMessage: e.toString(), hasMoreReels: false));
     }
   }
 

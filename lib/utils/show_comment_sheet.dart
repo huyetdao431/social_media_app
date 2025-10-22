@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../screens/comments_screen/comment_screen.dart';
 
-void showCommentsModal(BuildContext context, {required String postId}) {
+void showCommentsModal(BuildContext context, {required String targetType, required String targetId}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -14,7 +14,7 @@ void showCommentsModal(BuildContext context, {required String postId}) {
         maxChildSize: 0.95,
         expand: false,
         builder: (context, scrollController) {
-          return CommentsModal(scrollController: scrollController, targetType: 'post', targetId: postId);
+          return CommentsModal(scrollController: scrollController, targetType: targetType, targetId: targetId);
         },
       );
     },

@@ -9,6 +9,7 @@ import 'package:social_media_app/cubit/story_bloc/story_bloc.dart';
 import 'package:social_media_app/screens/account_screen/account_screen.dart';
 import 'package:social_media_app/screens/account_screen/account_setting_screen.dart';
 import 'package:social_media_app/screens/account_screen/edit_profile_screen.dart';
+import 'package:social_media_app/screens/account_screen/list_profile_reel_screen.dart';
 import 'package:social_media_app/screens/add_post_screen/add_post_screen.dart';
 import 'package:social_media_app/commons/widgets/camera_screen.dart';
 import 'package:social_media_app/screens/add_post_screen/edit_image_screen.dart';
@@ -24,7 +25,7 @@ import 'package:social_media_app/screens/create_media_screen/create_media_screen
 import 'package:social_media_app/screens/home%20screen/home_screen.dart';
 import 'package:social_media_app/screens/auth_screen/login_screen.dart';
 import 'package:social_media_app/screens/main_screen/main_screen.dart';
-import 'package:social_media_app/screens/post_list_screen/post_list_screen.dart';
+import 'package:social_media_app/screens/account_screen/list_profile_post_screen.dart';
 import 'package:social_media_app/screens/reels_screen/reels_screen.dart';
 import 'package:social_media_app/screens/search_screen/search_screen.dart';
 import 'package:social_media_app/screens/splash_screen/splash_screen.dart';
@@ -80,9 +81,13 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case PreviewPostScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as PostCubit;
       return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: PreviewPostScreen()));
-    case PostListScreen.route:
+    case ListProfilePostScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as ProfileCubit;
-      return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: PostListScreen()));
+      return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: ListProfilePostScreen()));
+    case ListProfileReelScreen.route:
+      var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as ProfileCubit;
+      var index = (settings.arguments as Map<String, dynamic>)['index'] as int;
+      return MaterialPageRoute(builder: (context) => BlocProvider.value(value: cubit, child: ListProfileReelScreen(index: index)));
     case EditStoryScreen.route:
       var bloc = (settings.arguments as Map<String, dynamic>)['bloc'] as StoryBloc;
       return MaterialPageRoute(builder: (context) => BlocProvider.value(value: bloc, child: EditStoryScreen()));

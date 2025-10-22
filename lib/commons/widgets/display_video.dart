@@ -1,13 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:social_media_app/materials/app_colors.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_video_player_plus/cached_video_player_plus.dart';
 
 class SmartVideo extends StatefulWidget {
   final File? file;
-  final String? url; // Nếu có url thì ưu tiên url
+  final String? url;
   final bool shouldPlay;
-  final double? aspectRatio; // optional override
+  final double? aspectRatio;
+  final bool showProgress;
+  final bool allowScrubbing;
+  final ValueChanged<VideoPlayerController?>? onInitialized;
 
   const SmartVideo({
     super.key,
@@ -15,6 +19,9 @@ class SmartVideo extends StatefulWidget {
     this.url,
     required this.shouldPlay,
     this.aspectRatio,
+    this.showProgress = false,
+    this.allowScrubbing = false,
+    this.onInitialized,
   }) : assert(file != null || url != null, 'Provide either file or url');
 
   @override
@@ -23,10 +30,9 @@ class SmartVideo extends StatefulWidget {
 
 class _SmartVideoState extends State<SmartVideo> {
   VideoPlayerController? _controller;
-
   CachedVideoPlayerPlus? _cachedPlayer;
-
   bool _initialized = false;
+  bool _isInitializing = false;
 
   @override
   void initState() {
@@ -34,23 +40,44 @@ class _SmartVideoState extends State<SmartVideo> {
     _setupController();
   }
 
+  void _notifyInitialized(VideoPlayerController? ctrl) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onInitialized?.call(ctrl);
+    });
+  }
+
   void _disposeCurrentController() {
-    _controller?.dispose();
-    _controller = null;
-    _cachedPlayer?.dispose();
-    _cachedPlayer = null;
+    if (_cachedPlayer != null) {
+      try {
+        _cachedPlayer!.dispose();
+      } catch (e) {
+        debugPrint('Error disposing cached player: $e');
+      }
+      _cachedPlayer = null;
+      _controller = null;
+      _notifyInitialized(null);
+    } else {
+      try {
+        _controller?.dispose();
+      } catch (e) {
+        debugPrint('Error disposing controller: $e');
+      }
+      _controller = null;
+      _notifyInitialized(null);
+    }
     _initialized = false;
   }
 
   Future<void> _setupController() async {
+    if (_isInitializing) return;
+    _isInitializing = true;
     _disposeCurrentController();
-
     try {
       if (widget.url != null) {
         final player = CachedVideoPlayerPlus.networkUrl(
           Uri.parse(widget.url!),
           invalidateCacheIfOlderThan: const Duration(minutes: 10),
-          // cacheKey: 'video-id-for-${widget.url}',
         );
         await player.initialize();
         _cachedPlayer = player;
@@ -59,40 +86,37 @@ class _SmartVideoState extends State<SmartVideo> {
         _controller = VideoPlayerController.file(widget.file!);
         await _controller!.initialize();
       }
-
-      if (_controller == null) return;
-
-      _controller!.setLooping(true);
-
-      if (!mounted) return;
+      if (!mounted) {
+        _isInitializing = false;
+        return;
+      }
+      _controller?.setLooping(true);
       setState(() {
-        _initialized = true;
+        _initialized = _controller?.value.isInitialized ?? false;
       });
-
-      if (widget.shouldPlay) _controller!.play();
+      _notifyInitialized(_controller);
+      if (widget.shouldPlay && _controller != null && _controller!.value.isInitialized) {
+        _controller!.play();
+      } else if (_controller != null) {
+        _controller!.pause();
+      }
     } catch (e) {
-      if (!mounted) return;
-      debugPrint('SmartVideo Error: $e');
-      setState(() {
-        _initialized = false;
-      });
+      debugPrint('SmartVideo init error: $e');
+      if (mounted) setState(() => _initialized = false);
+    } finally {
+      _isInitializing = false;
     }
   }
 
   @override
   void didUpdateWidget(covariant SmartVideo oldWidget) {
     super.didUpdateWidget(oldWidget);
-
     final oldSrc = oldWidget.url ?? oldWidget.file?.path;
     final newSrc = widget.url ?? widget.file?.path;
-
-    // Nếu đổi source (URL/File) thì khởi tạo lại controller
     if (oldSrc != newSrc) {
       _setupController();
       return;
     }
-
-    // Nếu chỉ thay đổi play state và đã khởi tạo xong
     if (oldWidget.shouldPlay != widget.shouldPlay && _controller != null && _initialized) {
       if (widget.shouldPlay) {
         _controller!.play();
@@ -104,46 +128,68 @@ class _SmartVideoState extends State<SmartVideo> {
 
   @override
   void dispose() {
-    _disposeCurrentController(); // Dùng hàm dispose đã tạo để đảm bảo dọn dẹp
+    _disposeCurrentController();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_initialized || _controller == null) {
-      // Placeholder kích thước vuông theo width khi đang tải
       final width = MediaQuery.sizeOf(context).width;
       final size = width;
       return SizedBox(
         width: size,
         height: size,
-        child: const Center(
-          child: CircularProgressIndicator.adaptive(), // Dùng adaptive cho cross-platform
-        ),
+        child: const Center(child: CircularProgressIndicator.adaptive()),
       );
     }
 
-    // Lấy kích thước và tỉ lệ của video từ controller
     final videoSize = _controller!.value.size;
-    final defaultAspect = videoSize.width > 0 && videoSize.height > 0
-        ? videoSize.width / videoSize.height
-        : 1.0;
-
+    final defaultAspect = videoSize.width > 0 && videoSize.height > 0 ? videoSize.width / videoSize.height : 1.0;
     final aspect = widget.aspectRatio ?? defaultAspect;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final calculatedHeight = screenWidth / aspect;
 
-    return AspectRatio(
-      aspectRatio: aspect,
-      child: FittedBox(
-        fit: BoxFit.cover,
-        // Khi dùng FittedBox(fit: BoxFit.cover), chúng ta cần đảm bảo
-        // kích thước của SizedBox là kích thước thực của video.
-        // Điều này giúp VideoPlayer hiển thị đúng nội dung.
-        child: SizedBox(
-          width: videoSize.width,
-          height: videoSize.height,
-          child: VideoPlayer(_controller!), // Luôn dùng _controller!
+    final videoWidget = FittedBox(
+      fit: BoxFit.cover,
+      child: SizedBox(
+        width: videoSize.width,
+        height: videoSize.height,
+        child: VideoPlayer(_controller!),
+      ),
+    );
+
+    final progressBar = widget.showProgress
+        ? Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: SizedBox(
+        height: 30,
+        child: VideoProgressIndicator(
+          _controller!,
+          allowScrubbing: widget.allowScrubbing,
+          colors: const VideoProgressColors(
+            playedColor: Colors.white,
+            backgroundColor: Colors.white24,
+            bufferedColor: Colors.transparent,
+          ),
         ),
       ),
+    )
+        : const SizedBox.shrink();
+
+    if (widget.aspectRatio != null) {
+      return AspectRatio(
+        aspectRatio: aspect,
+        child: Stack(fit: StackFit.expand, children: [videoWidget, progressBar]),
+      );
+    }
+
+    return SizedBox(
+      width: screenWidth,
+      height: calculatedHeight,
+      child: Stack(fit: StackFit.expand, children: [videoWidget, progressBar]),
     );
   }
 }

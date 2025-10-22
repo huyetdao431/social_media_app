@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:social_media_app/cubit/main_cubit/main_cubit.dart';
 import 'package:social_media_app/cubit/profile_cubit/profile_cubit.dart';
+import 'package:social_media_app/models/reel.dart';
 import 'package:social_media_app/screens/account_screen/account_setting_screen.dart';
 import 'package:social_media_app/screens/account_screen/edit_profile_screen.dart';
-import 'package:social_media_app/screens/post_list_screen/post_list_screen.dart';
+import 'package:social_media_app/screens/account_screen/list_profile_post_screen.dart';
+import 'package:social_media_app/screens/account_screen/list_profile_reel_screen.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
 import 'package:social_media_app/utils/loader/skeleton_loader.dart';
 
@@ -46,7 +48,10 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cubit = context.read<ProfileCubit>();
-      cubit.loadUserPosts();
+      Future.wait([
+        cubit.loadUserPosts(),
+        cubit.loadUserReels(),
+      ]);
     });
   }
 
@@ -67,12 +72,6 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
     if (post.mediaList == null || post.mediaList!.isEmpty) return false;
     final first = post.mediaList!.first;
     return first.mediaType.toLowerCase().startsWith('video');
-  }
-
-  bool _isPostImage(Post post) {
-    if (post.mediaList == null || post.mediaList!.isEmpty) return false;
-    final first = post.mediaList!.first;
-    return first.mediaType.toLowerCase().startsWith('image');
   }
 
   @override
@@ -102,7 +101,7 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
           final cubit = context.read<ProfileCubit>();
           final isLoading = state.loadPostStatus == LoadStatus.loading;
           final allPosts = state.userPosts;
-          // final videoPosts = allPosts.where((p) => _isPostVideo(p)).toList();
+          final allReels = state.userReels;
 
           return NestedScrollView(
             controller: _outerScrollController,
@@ -141,12 +140,13 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
                 Builder(builder: (innerContext) {
                   return _buildTabContent(
                     context: innerContext,
-                    postsToShow: allPosts,
+                    contentType: 'post',
+                    medias: allPosts,
                     isLoading: isLoading,
                     onLoadMore: () => cubit.loadMoreUserPosts(),
                     onTapItem: (index) {
                       cubit.setMediaIndex(index);
-                      Navigator.of(innerContext).pushNamed(PostListScreen.route, arguments: {'cubit': cubit});
+                      Navigator.of(innerContext).pushNamed(ListProfilePostScreen.route, arguments: {'cubit': cubit});
                     },
                   );
                 }),
@@ -154,12 +154,13 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
                 Builder(builder: (innerContext) {
                   return _buildTabContent(
                     context: innerContext,
-                    postsToShow: [],
+                    contentType: 'reel',
+                    medias: allReels,
                     isLoading: isLoading,
-                    onLoadMore: () => cubit.loadMoreUserPosts(),
+                    onLoadMore: () => cubit.loadMoreReels(),
                     onTapItem: (index) {
                       cubit.setMediaIndex(index);
-                      Navigator.of(innerContext).pushNamed(PostListScreen.route, arguments: {'cubit': cubit});
+                      Navigator.of(innerContext).pushNamed(ListProfileReelScreen.route, arguments: {'cubit': cubit, 'index' : index});
                     },
                   );
                 }),
@@ -173,25 +174,30 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
 
   Widget _buildTabContent({
     required BuildContext context,
-    required List<Post> postsToShow,
+    required String contentType,
+    required List<dynamic> medias,
     required bool isLoading,
     required VoidCallback onLoadMore,
     required void Function(int index) onTapItem,
   }) {
-    // grid configuration (giữ thống nhất với trước)
+    bool isPost = contentType == 'post' ? true : false;
+    List<dynamic> contentToShow;
+    if(isPost) {
+      contentToShow = medias as List<Post>;
+    } else {
+      contentToShow = medias as List<Reel>;
+    }
     const int crossAxisCount = 3;
     const double crossAxisSpacing = 2;
     const double mainAxisSpacing = 2;
-    const double horizontalPadding = 1.0; // = padding left + right mỗi bên
+    const double horizontalPadding = 1.0;
 
-    // Nếu đang load lần đầu và chưa có post => loader trung tâm
-    if (isLoading && postsToShow.isEmpty) {
+    if (isLoading && contentToShow.isEmpty) {
       return SkeletonLoader.skeletonSliverGrid(context: context);
     }
 
-    // Nếu không load và không có post => "No Post Yet"
-    if (!isLoading && postsToShow.isEmpty) {
-      return Center(child: Text('No Post Yet', style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500)));
+    if (!isLoading && contentToShow.isEmpty) {
+      return Center(child: Text(isPost ? 'No Post Yet' : 'No Reel Yet', style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500)));
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
@@ -201,10 +207,13 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - _loadMoreThreshold &&
-            !(context.read<ProfileCubit>().state.loadPostStatus == LoadStatus.loading) &&
-            context.read<ProfileCubit>().state.hasMorePosts) {
-          onLoadMore();
+        if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - _loadMoreThreshold) {
+          if((context.read<ProfileCubit>().state.loadPostStatus == LoadStatus.loading) && context.read<ProfileCubit>().state.hasMorePosts) {
+            onLoadMore();
+          }
+          if((context.read<ProfileCubit>().state.loadReelStatus == LoadStatus.loading) && context.read<ProfileCubit>().state.hasMoreReels) {
+            onLoadMore();
+          }
         }
         return false;
       },
@@ -221,10 +230,10 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: horizontalPadding),
             sliver: SliverGrid(
               delegate: SliverChildBuilderDelegate((context, index) {
-                final post = postsToShow[index];
-                final thumb = _thumbnailForPost(post);
-                final hasMany = (post.mediaList?.length ?? 0) > 1;
-                final isVideo = _isPostVideo(post);
+                final media = contentToShow[index];
+                final thumb = isPost ? _thumbnailForPost(media) : media.posterUrl;
+                final hasMany = isPost ? (media.mediaList?.length ?? 0) > 1 : false;
+                final isVideo = isPost ? _isPostVideo(media) : true;
 
                 return GestureDetector(
                   onTap: () => onTapItem(index),
@@ -244,7 +253,7 @@ class _AccountPageState extends State<_AccountPage> with TickerProviderStateMixi
                     ],
                   ),
                 );
-              }, childCount: postsToShow.length),
+              }, childCount: contentToShow.length),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
                 mainAxisSpacing: mainAxisSpacing,

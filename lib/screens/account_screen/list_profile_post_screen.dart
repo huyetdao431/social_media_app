@@ -5,17 +5,15 @@ import 'package:social_media_app/commons/widgets/post_widget.dart';
 import 'package:social_media_app/cubit/profile_cubit/profile_cubit.dart';
 
 
-class PostListScreen extends StatelessWidget {
-  static const String route = 'PostListScreen';
+class ListProfilePostScreen extends StatelessWidget {
+  static const String route = 'ListProfilePostScreen';
 
-  const PostListScreen({super.key});
+  const ListProfilePostScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ListPostsPage();
   }
-
-
 }
 
 class ListPostsPage extends StatefulWidget {

@@ -783,7 +783,7 @@ class ApiImpl implements Api {
     try {
       final query = supabase
           .from('reels')
-          .select('*, profiles(username, avatar_url)')
+          .select('*, profiles!reels_user_id_fkey(username, avatar_url)')
           .eq('user_id', userId)
           .eq('is_public', true)
           .order('created_at', ascending: false);

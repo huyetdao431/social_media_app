@@ -384,7 +384,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
               const SizedBox(width: 12),
 
               // Comment
-              GestureDetector(onTap: () => showCommentsModal(context, postId: widget.post.id), child: const Icon(Icons.mode_comment_outlined, size: 32)),
+              GestureDetector(onTap: () => showCommentsModal(context, targetType: 'post', targetId: widget.post.id), child: const Icon(Icons.mode_comment_outlined, size: 32)),
               const SizedBox(width: 12),
 
               // Share
@@ -425,7 +425,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
               const SizedBox(height: 6),
               if (widget.post.commentsCount > 0)
                 GestureDetector(
-                  onTap: () => showCommentsModal(context, postId: widget.post.id),
+                  onTap: () => showCommentsModal(context, targetType: 'post', targetId: widget.post.id),
                   child: Text('Xem tất cả ${widget.post.commentsCount} bình luận', style: AppTextStyles.hashtag(context)),
                 ),
             ],
