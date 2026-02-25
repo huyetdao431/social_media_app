@@ -101,5 +101,14 @@ abstract class Api {
   Future<Reel> updateReelStatus({required String reelId, bool? isPublic});
 
   Future<bool> deleteReelSoft({required String reelId});
+
+  //</editor-fold>
+
+  //<editor-fold desc='search's methods>
+  Future<List<Profile>> searchProfiles({required String query, int limit = 20, double? lastScore, String? lastId});
+
+  Future<List<Reel>> searchReels({required String query, int limit = 20, double? lastScore, String? lastId});
+
+  Future<List<Post>> searchPosts({required String query, int limit = 20, double? lastScore, String? lastId});
   //</editor-fold>
 }

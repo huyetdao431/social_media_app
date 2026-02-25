@@ -318,12 +318,7 @@ class ApiImpl implements Api {
   Future<String?> generateVideoThumb({required String bucketName, required File videoFile, required String userId, File? thumbImage}) async {
     try {
       if (thumbImage != null) {
-        final thumbUrl = await uploadFile(
-          bucketName: bucketName,
-          file: thumbImage,
-          userId: userId,
-          folder: 'thumbnails',
-        );
+        final thumbUrl = await uploadFile(bucketName: bucketName, file: thumbImage, userId: userId, folder: 'thumbnails');
         return thumbUrl;
       }
 
@@ -340,12 +335,7 @@ class ApiImpl implements Api {
       }
 
       final thumbFile = File(thumbPath);
-      final thumbUrl = await uploadFile(
-        bucketName: bucketName,
-        file: thumbFile,
-        userId: userId,
-        folder: 'thumbnails',
-      );
+      final thumbUrl = await uploadFile(bucketName: bucketName, file: thumbFile, userId: userId, folder: 'thumbnails');
 
       return thumbUrl;
     } catch (e, st) {
@@ -370,7 +360,7 @@ class ApiImpl implements Api {
       String? thumbUrl;
 
       if (isVideo) {
-        thumbUrl = await generateVideoThumb(bucketName: 'posts', videoFile: file, userId:  userId);
+        thumbUrl = await generateVideoThumb(bucketName: 'posts', videoFile: file, userId: userId);
       } else {
         thumbUrl = null;
       }
@@ -667,7 +657,6 @@ class ApiImpl implements Api {
       final List rows = (res == null) ? [] : (res as List);
       return rows.map((r) {
         final Map<String, dynamic> m = Map<String, dynamic>.from(r as Map);
-        print(Story.fromMap(m));
         return Story.fromMap(m);
       }).toList();
     } on PostgrestException catch (e) {
@@ -844,6 +833,67 @@ class ApiImpl implements Api {
       return false;
     } catch (e) {
       return false;
+    }
+  }
+
+  //</editor-fold>
+
+  //<editor-fold desc="search_methods">
+
+  Future<List<Profile>> searchProfiles({required String query, int limit = 20, double? lastScore, String? lastId}) async {
+    try {
+      final res = await supabase.rpc('search_profiles_text', params: {'q': query, 'p_limit': limit, 'last_score': lastScore, 'last_id': lastId});
+
+      final data = res.data;
+      if (data == null) return [];
+
+      final List rows = (data is List) ? data : [data];
+      return rows.map((r) {
+        final Map<String, dynamic> m = Map<String, dynamic>.from(r as Map);
+        return Profile.fromMap(m);
+      }).toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase RPC error (searchProfiles): ${e.message}');
+    } catch (e) {
+      throw Exception('searchProfiles failed: $e');
+    }
+  }
+
+  Future<List<Reel>> searchReels({required String query, int limit = 20, double? lastScore, String? lastId}) async {
+    try {
+      final res = await supabase.rpc('search_reels_text', params: {'q': query, 'p_limit': limit, 'last_score': lastScore, 'last_id': lastId});
+
+      final data = res.data;
+      if (data == null) return [];
+
+      final List rows = (data is List) ? data : [data];
+      return rows.map((r) {
+        final Map<String, dynamic> m = Map<String, dynamic>.from(r as Map);
+        return Reel.fromMap(m);
+      }).toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase RPC error (searchReels): ${e.message}');
+    } catch (e) {
+      throw Exception('searchReels failed: $e');
+    }
+  }
+
+  Future<List<Post>> searchPosts({required String query, int limit = 20, double? lastScore, String? lastId}) async {
+    try {
+      final res = await supabase.rpc('search_posts_text', params: {'q': query, 'p_limit': limit, 'last_score': lastScore, 'last_id': lastId});
+
+      final data = res.data;
+      if (data == null) return [];
+
+      final List rows = (data is List) ? data : [data];
+      return rows.map((r) {
+        final Map<String, dynamic> m = Map<String, dynamic>.from(r as Map);
+        return Post.fromMap(m);
+      }).toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Supabase RPC error (searchPosts): ${e.message}');
+    } catch (e) {
+      throw Exception('searchPosts failed: $e');
     }
   }
 

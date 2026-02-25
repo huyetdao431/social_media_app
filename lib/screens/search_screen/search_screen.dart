@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:social_media_app/cubit/search_bloc/search_bloc.dart';
 import 'package:social_media_app/materials/app_colors.dart';
 import 'package:social_media_app/materials/app_text_styles.dart';
-import 'package:social_media_app/screens/search_screen/cubit/search_cubit.dart';
+import 'package:social_media_app/services/repositories/api/api.dart';
 
 class SearchScreen extends StatelessWidget {
   static const String route = 'SearchScreen';
@@ -11,7 +13,7 @@ class SearchScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => SearchCubit(), child: Scaffold(body: Page()));
+    return BlocProvider(create: (context) => SearchBloc(context.read<Api>()), child: Scaffold(body: SafeArea(child: Page())));
   }
 }
 
@@ -25,10 +27,10 @@ class Page extends StatefulWidget {
 class _PageState extends State<Page> {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SearchCubit, SearchState>(
+    return BlocBuilder<SearchBloc, SearchState>(
       builder: (context, state) {
-        var cubit = context.read<SearchCubit>();
-        return cubit.state.isSearchPage ? SearchPage() : ExplorePage();
+        var bloc = context.read<SearchBloc>();
+        return bloc.state.isSearchPage ? SearchPage() : ExplorePage();
       },
     );
   }
@@ -80,16 +82,14 @@ class _ExplorePageState extends State<ExplorePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SearchCubit, SearchState>(
+    return BlocBuilder<SearchBloc, SearchState>(
       builder: (context, state) {
-        var cubit = context.read<SearchCubit>();
+        final isSearchPage = context.read<SearchBloc>().state.isSearchPage;
         return Column(
           children: [
             ListTile(
               onTap: () {
-                setState(() {
-                  cubit.togglePage();
-                });
+                context.read<SearchBloc>().add(SwitchPageEvent(isSearchPage: !isSearchPage));
               },
               title: Text('input search information'),
               leading: Icon(Icons.search),
@@ -142,34 +142,50 @@ class SearchPage extends StatefulWidget {
   State<SearchPage> createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _SearchPageState extends State<SearchPage> with SingleTickerProviderStateMixin {
   final FocusNode _focusNode = FocusNode();
   final TextEditingController _searchController = TextEditingController(text: '');
 
+  late final TabController _tabController;
+  final List<String> _tabs = ['For you', 'Posts', 'Reels'];
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+
+    _tabController = TabController(length: _tabs.length, vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
+    });
+
+    _searchController.addListener(() {
+      setState(() {});
     });
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _focusNode.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  List<String> _filterList(List<String> source) {
+    final q = _searchController.text.trim().toLowerCase();
+    if (q.isEmpty) return source;
+    return source.where((s) => s.toLowerCase().contains(q)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    return BlocBuilder<SearchCubit, SearchState>(
+
+    return BlocBuilder<SearchBloc, SearchState>(
       builder: (context, state) {
-        var cubit = context.read<SearchCubit>();
+        final isSearchPage = context.read<SearchBloc>().state.isSearchPage;
         return Padding(
           padding: const EdgeInsets.fromLTRB(0, 8, 12, 12),
           child: Column(
@@ -178,13 +194,11 @@ class _SearchPageState extends State<SearchPage> {
                 children: [
                   IconButton(
                     onPressed: () {
-                      setState(() {
-                        cubit.togglePage();
-                      });
+                      context.read<SearchBloc>().add(SwitchPageEvent(isSearchPage: !isSearchPage));
                     },
-                    icon: Icon(Icons.arrow_back),
+                    icon: const Icon(Icons.arrow_back),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       focusNode: _focusNode,
@@ -194,46 +208,108 @@ class _SearchPageState extends State<SearchPage> {
                       decoration: InputDecoration(
                         hintText: 'Input search information',
                         hintStyle: TextStyle(color: theme.hintColor),
-                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
                         filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest, // phù hợp với dark/light mode
+                        fillColor: colorScheme.surfaceContainerHighest,
                       ),
                       style: TextStyle(color: colorScheme.onSurface),
-                      // màu chữ
                       cursorColor: colorScheme.primary,
                     ),
                   ),
                 ],
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  child: Column(
-                    children: [
-                      Align(alignment: Alignment.centerLeft, child: Text('recently', style: AppTextStyles.subHeadline(context))),
-                      SizedBox(height: 12),
-                      Row(
-                        children: [
-                          CircleAvatar(radius: 24, backgroundImage: AssetImage('assets/images/avt_02.png'), backgroundColor: Colors.transparent),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [Text('username', style: AppTextStyles.username(context)), Text('Name', style: AppTextStyles.name(context))],
-                            ),
-                          ),
-                          IconButton(onPressed: () {}, icon: Icon(Icons.close, size: 16)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+
+              // Expanded(
+              //   child: Padding(
+              //     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              //     child: Column(
+              //       children: [
+              //         Align(alignment: Alignment.centerLeft, child: Text('recently', style: AppTextStyles.subHeadline(context))),
+              //         SizedBox(height: 12),
+              //         Row(
+              //           children: [
+              //             CircleAvatar(radius: 24, backgroundImage: AssetImage('assets/images/avt_02.png'), backgroundColor: Colors.transparent),
+              //             SizedBox(width: 12),
+              //             Expanded(
+              //               child: Column(
+              //                 crossAxisAlignment: CrossAxisAlignment.start,
+              //                 children: [Text('username', style: AppTextStyles.username(context)), Text('Name', style: AppTextStyles.name(context))],
+              //               ),
+              //             ),
+              //             IconButton(onPressed: () {}, icon: Icon(Icons.close, size: 16)),
+              //           ],
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
+              _buildSearchResultScreen(),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSearchResultScreen() {
+    return Expanded(
+      child: Column(
+        children: [
+          TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            labelColor: Theme.of(context).colorScheme.onSurface,
+            unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withAlpha(150),
+            labelStyle: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+            unselectedLabelStyle: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500),
+            indicator: UnderlineTabIndicator(borderSide: BorderSide(width: 3, color: Theme.of(context).colorScheme.onSurface)),
+            indicatorSize: TabBarIndicatorSize.label,
+            tabAlignment: TabAlignment.start,
+            tabs: _tabs.map((t) => Tab(text: t)).toList(),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // All: gom tất cả kết quả
+
+                // People
+                _buildResultsList(items: _filterList([]), emptyLabel: 'No people found'),
+
+                // Tags
+                _buildResultsList(items: _filterList([]), emptyLabel: 'No tags found'),
+
+                // Posts
+                _buildResultsList(items: _filterList([]), emptyLabel: 'No posts found'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultsList({required List<String> items, required String emptyLabel}) {
+    if (items.isEmpty) {
+      return Center(child: Text(emptyLabel, style: Theme.of(context).textTheme.bodyMedium));
+    }
+
+    return ListView.separated(
+      key: PageStorageKey<String>(emptyLabel), // giữ trạng thái cuộn cho từng tab
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return ListTile(
+          leading: CircleAvatar(child: Text(item.isNotEmpty ? item[0].toUpperCase() : '?')),
+          title: Text(item),
+          subtitle: Text('Some extra info'),
+          onTap: () {
+            // xử lý khi bấm kết quả
+          },
+        );
+      },
+      separatorBuilder: (_, __) => const Divider(height: 1),
+      itemCount: items.length,
     );
   }
 }

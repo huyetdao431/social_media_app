@@ -6,7 +6,6 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:social_media_app/commons/enums/load_status.dart';
 import 'package:social_media_app/commons/widgets/video_trimmer_screen.dart';
 import 'package:social_media_app/cubit/reel_bloc/reel_bloc.dart';
-import 'package:social_media_app/cubit/reel_cubit/reel_cubit.dart' hide ReelState;
 import 'package:social_media_app/screens/add_reel_screen/edit_reel_screen.dart';
 import 'package:social_media_app/services/repositories/api/api.dart';
 import 'package:social_media_app/utils/dialogs.dart';
